@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_de">Deutsch</string>
+    <string name="server_hu">Magyar</string>
+    <string name="neu_laden">Újratöltés</string>
+    <string name="nicht_erreichbar">A kívánságoldal most nem érhető el. Kérjük, ellenőrizd az internetkapcsolatot.</string>
+    <string name="nochmal">Újra</string>
+    <string name="update_titel">Frissítés elérhető</string>
+    <string name="update_text">A(z) %1$s %2$s verziója elérhető. Frissítsünk most?</string>
+    <string name="update_jetzt">Frissítés most</string>
+    <string name="update_spaeter">Később</string>
+    <string name="update_laedt">Frissítés letöltése …</string>
+    <string name="update_fehler">A frissítést nem sikerült letölteni.</string>
+    <string name="update_erlaubnis_titel">Engedély a frissítésekhez</string>
+    <string name="update_erlaubnis_text">Ahhoz, hogy a(z) %1$s frissíteni tudja magát, egyszer engedélyezni kell az „Ismeretlen alkalmazások telepítése” beállítást. Kapcsold be a következő oldalon, majd térj vissza – a frissítés automatikusan folytatódik.</string>
+    <string name="update_erlaubnis_oeffnen">Beállítások megnyitása</string>
+</resources>

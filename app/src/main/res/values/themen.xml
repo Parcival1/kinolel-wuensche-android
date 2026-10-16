@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Thema" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/leiste</item>
+        <item name="colorPrimaryDark">@color/grund</item>
+        <item name="colorAccent">@color/lavendel</item>
+        <item name="android:windowBackground">@color/grund</item>
+        <item name="android:statusBarColor">@color/grund</item>
+        <item name="android:navigationBarColor">@color/grund</item>
+    </style>
+
+    <style name="Thema.Start" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/grund</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/startbild_symbol</item>
+        <item name="postSplashScreenTheme">@style/Thema</item>
+    </style>
+</resources>

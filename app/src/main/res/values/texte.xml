@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Standard Deutsch, Ungarisch in values-hu -->
+<resources>
+    <string name="server_de">Deutsch</string>
+    <string name="server_hu">Magyar</string>
+    <string name="neu_laden">Neu laden</string>
+    <string name="nicht_erreichbar">Die Wunschseite ist gerade nicht erreichbar. Bitte Internetverbindung prüfen.</string>
+    <string name="nochmal">Erneut versuchen</string>
+    <string name="update_titel">Update verfügbar</string>
+    <string name="update_text">%1$s %2$s ist verfügbar. Jetzt aktualisieren?</string>
+    <string name="update_jetzt">Jetzt aktualisieren</string>
+    <string name="update_spaeter">Später</string>
+    <string name="update_laedt">Update wird geladen …</string>
+    <string name="update_fehler">Update konnte nicht geladen werden.</string>
+    <string name="update_erlaubnis_titel">Erlaubnis für Updates</string>
+    <string name="update_erlaubnis_text">Damit sich %1$s selbst aktualisieren kann, braucht es einmalig die Erlaubnis „Unbekannte Apps installieren“. Auf der nächsten Seite einschalten und dann zurückkehren – das Update startet danach automatisch.</string>
+    <string name="update_erlaubnis_oeffnen">Einstellungen öffnen</string>
+</resources>
