@@ -12,7 +12,7 @@ fun versionCode(v: String): Int = v.split('.').map { it.substringBefore('-').toI
 
 android {
     namespace = "de.kinolel.wuensche"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = marke.getProperty("APPLICATION_ID")
