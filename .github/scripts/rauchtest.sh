@@ -17,4 +17,7 @@ adb shell am force-stop "$PAKET"
 adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d "https://kivansagok.kinolel.de/" | tee rauchtest/link-hu.txt
 sleep 20; adb exec-out screencap -p > rauchtest/03-link-ungarisch.png
 adb shell dumpsys activity activities | grep -E "topResumedActivity|mResumedActivity" | tee -a rauchtest/link-hu.txt
+# zurück auf den deutschen Server per Link (warmer WebView)
+adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d "https://wuensche.kinolel.de/" | tee rauchtest/link-de.txt
+sleep 15; adb exec-out screencap -p > rauchtest/04-link-deutsch.png
 exit 0
