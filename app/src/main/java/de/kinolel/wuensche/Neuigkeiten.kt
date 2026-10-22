@@ -7,7 +7,7 @@ import android.text.style.StyleSpan
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
-import timber.log.Timber
+import android.util.Log
 
 /**
  * KinoLel (Lel 22.10.2026): „Wenn es ein Update gab, einmalig nach der Aktualisierung eine Meldung, in der beschrieben ist,
@@ -37,7 +37,7 @@ object Neuigkeiten {
         }.getOrDefault(false)
         if (!aktualisiert) return
 
-        val eintraege = runCatching { lesen(activity, sprache(activity)) }.onFailure { Timber.w(it, "KinoLel: Neuigkeiten") }
+        val eintraege = runCatching { lesen(activity, sprache(activity)) }.onFailure { Log.w("KinoLelWuensche", "Neuigkeiten", it) }
             .getOrNull() ?: return
         val passend = eintraege
             .filter { (v, _) -> vergleiche(v, aktuell) <= 0 }
