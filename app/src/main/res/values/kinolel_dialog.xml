@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KinoLel (Lel 22.10.2026: „Text/Meldung in derselben Designfarbe wie die App“): alle Dialoge im Design der
+     Weboberfläche – dunkle Karte #1b1d2a mit feinem hellem Rand und runden Ecken, weiße Schrift Inter,
+     Hauptknopf gefüllt in Lavendel, normale Groß-/Kleinschreibung. Gilt über alertDialogTheme für alle AlertDialogs. -->
+<resources>
+    <color name="kinolel_dialog_grund">#FF1B1D2A</color>
+    <color name="kinolel_dialog_rand">#14FFFFFF</color>
+    <color name="kinolel_lavendel">#FF9AA4FF</color>
+    <color name="kinolel_text">#FFFFFFFF</color>
+    <color name="kinolel_text_hell">#FFC9CCD8</color>
+    <color name="kinolel_dunkel">#FF0B0F18</color>
+
+    <style name="KinoLel.Dialog" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/kinolel_dialog_hintergrund</item>
+        <item name="colorAccent">@color/kinolel_lavendel</item>
+        <item name="android:colorAccent">@color/kinolel_lavendel</item>
+        <item name="colorControlActivated">@color/kinolel_lavendel</item>
+        <item name="android:colorControlActivated">@color/kinolel_lavendel</item>
+        <item name="android:textColorPrimary">@color/kinolel_text</item>
+        <item name="android:textColorSecondary">@color/kinolel_text_hell</item>
+        <item name="android:textColorAlertDialogListItem">@color/kinolel_text</item>
+        <item name="android:windowTitleStyle">@style/KinoLel.Dialog.Titel</item>
+        <item name="android:textViewStyle">@style/KinoLel.Dialog.Text</item>
+        <item name="fontFamily">@font/inter</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="buttonBarPositiveButtonStyle">@style/KinoLel.Dialog.Knopf.Haupt</item>
+        <item name="buttonBarNegativeButtonStyle">@style/KinoLel.Dialog.Knopf</item>
+        <item name="buttonBarNeutralButtonStyle">@style/KinoLel.Dialog.Knopf</item>
+    </style>
+
+    <style name="KinoLel.Dialog.Titel" parent="TextAppearance.AppCompat.Title">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="fontFamily">@font/inter_semibold</item>
+        <item name="android:textColor">@color/kinolel_text</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="KinoLel.Dialog.Text" parent="android:Widget.TextView">
+        <item name="android:fontFamily">@font/inter_regular</item>
+        <item name="fontFamily">@font/inter_regular</item>
+        <item name="android:lineSpacingMultiplier">1.15</item>
+    </style>
+
+    <style name="KinoLel.Dialog.Knopf" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textAllCaps">false</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/kinolel_lavendel</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+
+    <style name="KinoLel.Dialog.Knopf.Haupt">
+        <item name="android:background">@drawable/kinolel_knopf_haupt</item>
+        <item name="android:textColor">@color/kinolel_dunkel</item>
+        <item name="android:paddingStart">22dp</item>
+        <item name="android:paddingEnd">22dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+    </style>
+</resources>

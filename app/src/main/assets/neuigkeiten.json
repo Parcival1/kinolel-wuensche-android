@@ -1,6 +1,18 @@
 {
   "versionen": [
     {
+      "version": "0.1.2",
+      "de": [
+        "Meldungen der App (wie diese hier) erscheinen jetzt im KinoLel-Design: dunkel, mit lila Knopf und der Schrift der Wunschseite."
+      ],
+      "hu": [
+        "Az app üzenetei (mint ez is) most KinoLel-stílusban jelennek meg: sötéten, lila gombbal és a kívánságoldal betűtípusával."
+      ],
+      "en": [
+        "The app's messages (like this one) now appear in the KinoLel design: dark, with a purple button and the wish page's font."
+      ]
+    },
+    {
       "version": "0.1.1",
       "de": [
         "Nach jedem Update zeigt die App jetzt einmal kurz, was neu ist – so wie hier.",

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KinoLel: gefüllter Hauptknopf in Lavendel (wie „Alles klar“ in Windows/iPhone) -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#33FFFFFF">
+    <item android:top="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="@color/kinolel_lavendel" />
+        </shape>
+    </item>
+</ripple>

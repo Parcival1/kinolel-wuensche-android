@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Thema" parent="Theme.AppCompat.NoActionBar">
+        <!-- KinoLel: Dialoge im Design der Weboberfläche (values/kinolel_dialog.xml) -->
+        <item name="alertDialogTheme">@style/KinoLel.Dialog</item>
         <item name="colorPrimary">@color/leiste</item>
         <item name="colorPrimaryDark">@color/grund</item>
         <item name="colorAccent">@color/lavendel</item>
