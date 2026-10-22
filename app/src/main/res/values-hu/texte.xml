@@ -14,4 +14,7 @@
     <string name="update_erlaubnis_titel">Engedély a frissítésekhez</string>
     <string name="update_erlaubnis_text">Ahhoz, hogy a(z) %1$s frissíteni tudja magát, egyszer engedélyezni kell az „Ismeretlen alkalmazások telepítése” beállítást. Kapcsold be a következő oldalon, majd térj vissza – a frissítés automatikusan folytatódik.</string>
     <string name="update_erlaubnis_oeffnen">Beállítások megnyitása</string>
+    <string name="neu_titel">Újdonságok – %1$s %2$s</string>
+    <string name="neu_version">%1$s. verzió</string>
+    <string name="neu_ok">Rendben</string>
 </resources>

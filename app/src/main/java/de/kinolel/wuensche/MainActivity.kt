@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity() {
         } else if (!oeffneLink(intent)) {
             web.loadUrl(server)
         }
+        Neuigkeiten.zeigenFallsNeu(this)   // einmal nach einem Update: was ist neu
         Aktualisierung.pruefen(this)
     }
 

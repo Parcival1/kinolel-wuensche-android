@@ -15,4 +15,7 @@
     <string name="update_erlaubnis_titel">Erlaubnis für Updates</string>
     <string name="update_erlaubnis_text">Damit sich %1$s selbst aktualisieren kann, braucht es einmalig die Erlaubnis „Unbekannte Apps installieren“. Auf der nächsten Seite einschalten und dann zurückkehren – das Update startet danach automatisch.</string>
     <string name="update_erlaubnis_oeffnen">Einstellungen öffnen</string>
+    <string name="neu_titel">Neu in %1$s %2$s</string>
+    <string name="neu_version">Version %1$s</string>
+    <string name="neu_ok">Alles klar</string>
 </resources>

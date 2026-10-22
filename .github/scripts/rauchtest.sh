@@ -4,7 +4,28 @@ set -x
 mkdir -p rauchtest
 APK=$(ls apk/*.apk | head -1)
 PAKET=$(grep '^APPLICATION_ID=' marke.properties | cut -d= -f2)
+ui() { adb exec-out uiautomator dump /dev/tty 2>/dev/null; }
+# Vorversion (letztes Release) installieren und einmal starten, dann Update: Meldung „Neu in …“ genau einmal
+VOR=$(curl -s https://api.github.com/repos/Parcival1/kinolel-wuensche-android/releases | python3 -c '
+import json,sys
+for r in json.load(sys.stdin):
+    for a in r.get("assets", []):
+        if a["name"].endswith(".apk"): print(a["browser_download_url"]); sys.exit()')
+if [ -n "$VOR" ] && curl -sSL -o vorversion.apk "$VOR"; then
+  adb install vorversion.apk
+  adb shell am start -W -n "$PAKET/.MainActivity"
+  sleep 10
+  adb shell am force-stop "$PAKET"
+fi
 adb install -r "$APK"
+adb shell am start -W -n "$PAKET/.MainActivity"
+sleep 6; adb exec-out screencap -p > rauchtest/00-neuigkeiten.png
+if ui | grep -q "Neu in "; then echo "NEUIGKEITEN: nach Update gezeigt" | tee rauchtest/neuigkeiten.txt; else echo "NEUIGKEITEN: FEHLT nach Update" | tee rauchtest/neuigkeiten.txt; fi
+adb shell am force-stop "$PAKET"
+adb shell am start -W -n "$PAKET/.MainActivity"
+sleep 6
+if ui | grep -q "Neu in "; then echo "NEUIGKEITEN: FEHLER – zweiter Start zeigt sie erneut" | tee -a rauchtest/neuigkeiten.txt; else echo "NEUIGKEITEN: zweiter Start ohne Meldung (richtig)" | tee -a rauchtest/neuigkeiten.txt; fi
+adb shell am force-stop "$PAKET"
 adb shell am start -W -n "$PAKET/.MainActivity"
 sleep 4;  adb exec-out screencap -p > rauchtest/01-start.png
 sleep 20; adb exec-out screencap -p > rauchtest/02-deutsch-24s.png

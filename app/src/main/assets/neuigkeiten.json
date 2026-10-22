@@ -1,0 +1,19 @@
+{
+  "versionen": [
+    {
+      "version": "0.1.1",
+      "de": [
+        "Nach jedem Update zeigt die App jetzt einmal kurz, was neu ist – so wie hier.",
+        "Ist dein Handy auf Englisch eingestellt, erscheinen die Texte der App jetzt auf Englisch."
+      ],
+      "hu": [
+        "Minden frissítés után az alkalmazás egyszer röviden megmutatja, mi az újdonság – mint most.",
+        "Ha a telefonod angolra van állítva, az alkalmazás szövegei most angolul jelennek meg."
+      ],
+      "en": [
+        "After every update, the app now briefly shows once what's new – just like this.",
+        "If your phone is set to English, the app's texts now appear in English."
+      ]
+    }
+  ]
+}

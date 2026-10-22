@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KinoLel Wünsche: Texte auf Englisch -->
+<resources>
+    <string name="server_de">Deutsch</string>
+    <string name="server_hu">Magyar</string>
+    <string name="neu_laden">Reload</string>
+    <string name="nicht_erreichbar">The wish page cannot be reached right now. Please check your internet connection.</string>
+    <string name="nochmal">Try again</string>
+    <string name="update_titel">Update available</string>
+    <string name="update_text">%1$s %2$s is available. Update now?</string>
+    <string name="update_jetzt">Update now</string>
+    <string name="update_spaeter">Later</string>
+    <string name="update_laedt">Downloading update …</string>
+    <string name="update_fehler">The update could not be downloaded.</string>
+    <string name="update_erlaubnis_titel">Permission for updates</string>
+    <string name="update_erlaubnis_text">To update itself, %1$s needs the permission “Install unknown apps” once. Turn it on on the next screen and come back – the update then continues automatically.</string>
+    <string name="update_erlaubnis_oeffnen">Open settings</string>
+    <string name="neu_titel">New in %1$s %2$s</string>
+    <string name="neu_version">Version %1$s</string>
+    <string name="neu_ok">Got it</string>
+</resources>
