@@ -1,6 +1,7 @@
 package de.kinolel.wuensche
 
 import android.content.Context
+import android.util.Log
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -15,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -22,7 +24,8 @@ import java.net.URL
 /**
  * KinoLel Wünsche: Auto-Update (wie in der KinoLel-App, Lel 16.10.).
  *
- * Beim Start (höchstens alle 6 Stunden) die GitHub-Releases von [BuildConfig.UPDATE_REPO] abfragen. Gibt es eine neuere
+ * Bei jedem Öffnen/Zurückkehren (Lel 22.10.2026) die Versionsliste auf kinolel.de abfragen (sonst GitHub-Releases von
+ * [BuildConfig.UPDATE_REPO]). Gibt es eine neuere
  * Version, fragt ein Dialog nach; „Jetzt aktualisieren“ lädt die APK und öffnet den Installationsdialog von Android.
  * Fehlt die Erlaubnis „Unbekannte Apps installieren“, wird sie erklärt und die passende Einstellungsseite geöffnet;
  * danach geht es in [fortsetzen] (onResume) automatisch weiter. Die APK ist mit demselben Schlüssel signiert,
@@ -30,25 +33,40 @@ import java.net.URL
  */
 object Aktualisierung {
     private const val VORLIEBEN = "kinolel_update"
-    private const val ABSTAND_MS = 6L * 60 * 60 * 1000
+    // Lel 22.10.2026: bei jedem Öffnen/Zurückkehren prüfen (statt alle 6 Stunden), höchstens einmal pro Minute.
+    // „Später“ unterdrückt dieselbe Version 4 Stunden lang.
+    private const val MIN_ABSTAND_MS = 60_000L
+    private const val SPAETER_MS = 4L * 60 * 60 * 1000
+    /** Neueste Versionen aller KinoLel-Apps auf kinolel.de (stündlich aus den GitHub-Releases, CT 103 apps_links.py) */
+    private const val APPS_LISTE = "https://kinolel.de/web/kinolel/apps.json"
+    private const val APPS_SCHLUESSEL = "wuensche-android"
     private var ausstehend: File? = null
+    private var zeigt = false
 
     private data class Neu(val version: String, val url: String)
 
-    fun pruefen(activity: AppCompatActivity, sofort: Boolean = false) {
+    /** Beim Öffnen und Zurückkehren (onResume). */
+    fun pruefen(activity: AppCompatActivity, vonHand: Boolean = false) {
+        if (zeigt || ausstehend != null) return
         activity.lifecycleScope.launch {
             val vorlieben = activity.getSharedPreferences(VORLIEBEN, Context.MODE_PRIVATE)
             val jetzt = System.currentTimeMillis()
-            if (!sofort && jetzt - vorlieben.getLong("zuletzt", 0) < ABSTAND_MS) return@launch
+            if (!vonHand && jetzt - vorlieben.getLong("zuletzt", 0) < MIN_ABSTAND_MS) return@launch
             vorlieben.edit().putLong("zuletzt", jetzt).apply()
 
-            val neu = withContext(Dispatchers.IO) { runCatching { suchen() }.getOrNull() } ?: return@launch
-            if (activity.isFinishing || activity.isDestroyed) return@launch
+            val ergebnis = withContext(Dispatchers.IO) { runCatching { suchen() } }
+            if (activity.isFinishing || activity.isDestroyed || zeigt) return@launch
+            val neu = ergebnis.getOrNull() ?: return@launch
+            val spaeterGewaehlt = vorlieben.getString("spaeter_version", null) == neu.version &&
+                jetzt - vorlieben.getLong("spaeter_zeit", 0) < SPAETER_MS
+            if (spaeterGewaehlt && !vonHand) return@launch
+            zeigt = true
             AlertDialog.Builder(activity)
                 .setTitle(R.string.update_titel)
                 .setMessage(activity.getString(R.string.update_text, BuildConfig.APP_NAME, neu.version))
                 .setPositiveButton(R.string.update_jetzt) { _, _ -> laden(activity, neu) }
-                .setNegativeButton(R.string.update_spaeter, null)
+                .setNegativeButton(R.string.update_spaeter) { _, _ -> vorlieben.edit().putString("spaeter_version", neu.version).putLong("spaeter_zeit", System.currentTimeMillis()).apply() }
+                .setOnDismissListener { zeigt = false }
                 .show()
         }
     }
@@ -62,15 +80,33 @@ object Aktualisierung {
         }
     }
 
-    private fun suchen(): Neu? {
-        val verbindung = URL("https://api.github.com/repos/${BuildConfig.UPDATE_REPO}/releases?per_page=10")
-            .openConnection() as HttpURLConnection
+    /** Erst die Liste auf kinolel.de; nur wenn sie nicht erreichbar ist, GitHub (ohne Anmeldung nur 60 Anfragen/Std. je Anschluss) */
+    private fun suchen(): Neu? = try {
+        ausListe()
+    } catch (e: Exception) {
+        Log.i("KinoLelWuensche", "Update: Liste nicht erreichbar (${e.message}), frage GitHub")
+        ausGithub()
+    }
+
+    private fun lese(adresse: String, accept: String? = null): String {
+        val verbindung = URL(adresse).openConnection() as HttpURLConnection
+        verbindung.useCaches = false
         verbindung.setRequestProperty("User-Agent", "${BuildConfig.APP_NAME}-Android/${BuildConfig.VERSION_NAME}")
-        verbindung.setRequestProperty("Accept", "application/vnd.github+json")
+        accept?.let { verbindung.setRequestProperty("Accept", it) }
         verbindung.connectTimeout = 15_000
         verbindung.readTimeout = 15_000
-        val text = verbindung.inputStream.bufferedReader().use { it.readText() }
-        val releases = JSONArray(text)
+        return verbindung.inputStream.bufferedReader().use { it.readText() }
+    }
+
+    private fun ausListe(): Neu? {
+        val eintrag = JSONObject(lese(APPS_LISTE)).getJSONObject(APPS_SCHLUESSEL)
+        val v = version(eintrag.getString("version"))
+        if (vergleiche(v, version(BuildConfig.VERSION_NAME)) <= 0) return null
+        return Neu(v.joinToString("."), eintrag.getString("url"))
+    }
+
+    private fun ausGithub(): Neu? {
+        val releases = JSONArray(lese("https://api.github.com/repos/${BuildConfig.UPDATE_REPO}/releases?per_page=10", "application/vnd.github+json"))
         var besteVersion = version(BuildConfig.VERSION_NAME)
         var beste: Neu? = null
         for (i in 0 until releases.length()) {
@@ -79,8 +115,8 @@ object Aktualisierung {
             val v = version(release.optString("tag_name"))
             if (vergleiche(v, besteVersion) <= 0) continue
             val anhaenge = release.optJSONArray("assets") ?: continue
-            for (j in 0 until anhaenge.length()) {
-                val anhang = anhaenge.getJSONObject(j)
+            for (k in 0 until anhaenge.length()) {
+                val anhang = anhaenge.getJSONObject(k)
                 if (anhang.optString("name").endsWith(".apk")) {
                     beste = Neu(v.joinToString("."), anhang.optString("browser_download_url"))
                     besteVersion = v

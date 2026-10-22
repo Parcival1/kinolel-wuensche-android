@@ -70,7 +70,6 @@ class MainActivity : AppCompatActivity() {
             web.loadUrl(server)
         }
         Neuigkeiten.zeigenFallsNeu(this)   // einmal nach einem Update: was ist neu
-        Aktualisierung.pruefen(this)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -81,6 +80,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Aktualisierung.fortsetzen(this)
+        // KinoLel (Lel 22.10.2026): bei jedem Öffnen/Zurückkehren nach Updates suchen
+        Aktualisierung.pruefen(this)
     }
 
     override fun onPause() {
