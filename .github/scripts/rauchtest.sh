@@ -6,7 +6,7 @@ APK=$(ls apk/*.apk | head -1)
 PAKET=$(grep '^APPLICATION_ID=' marke.properties | cut -d= -f2)
 ui() { adb exec-out uiautomator dump /dev/tty 2>/dev/null; }
 # Vorversion (letztes Release) installieren und einmal starten, dann Update: Meldung „Neu in …“ genau einmal
-VOR=$(curl -s https://api.github.com/repos/Parcival1/kinolel-wuensche-android/releases | python3 -c '
+VOR=$(curl -s ${GH_TOKEN:+-H "Authorization: Bearer $GH_TOKEN"} https://api.github.com/repos/Parcival1/kinolel-wuensche-android/releases | python3 -c '
 import json,sys
 for r in json.load(sys.stdin):
     for a in r.get("assets", []):
@@ -20,7 +20,7 @@ fi
 adb install -r "$APK"
 adb shell am start -W -n "$PAKET/.MainActivity"
 sleep 6; adb exec-out screencap -p > rauchtest/00-neuigkeiten.png
-if ui | grep -qE "Neu in |New in |Újdonságok"; then echo "NEUIGKEITEN: nach Update gezeigt" | tee rauchtest/neuigkeiten.txt; else echo "NEUIGKEITEN: FEHLT nach Update" | tee rauchtest/neuigkeiten.txt; fi
+if ui | grep -qE "Neu in |New in |Újdonságok"; then echo "NEUIGKEITEN: nach Update gezeigt" | tee rauchtest/neuigkeiten.txt; else if [ -z "${VOR:-}" ]; then echo "NEUIGKEITEN: nicht geprüft – Vorversion nicht gefunden (GitHub-API)" | tee rauchtest/neuigkeiten.txt; else echo "NEUIGKEITEN: FEHLT nach Update" | tee rauchtest/neuigkeiten.txt; fi; fi
 adb shell am force-stop "$PAKET"
 adb shell am start -W -n "$PAKET/.MainActivity"
 sleep 6
