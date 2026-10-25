@@ -49,9 +49,13 @@ adb shell am start -W -n "$PAKET/.MainActivity"
 sleep 6
 if ui | grep -qE "Neu in |New in |Újdonságok"; then echo "NEUIGKEITEN: FEHLER – zweiter Start zeigt sie erneut" | tee -a rauchtest/neuigkeiten.txt; else echo "NEUIGKEITEN: zweiter Start ohne Meldung (richtig)" | tee -a rauchtest/neuigkeiten.txt; fi
 # Lel 25.10.: Logo antippen -> Version und „Nach Updates suchen“ (App noch auf Magyar -> ungarisch)
+# App sicher im Vordergrund (lief sie nicht mehr, steht ein Absturz im logcat am Ende)
+pidof_vorher=$(adb shell pidof "$PAKET" | tr -d "\r")
+echo "INFO: App-Prozess vor dem Logo-Test: ${pidof_vorher:-keiner}" | tee rauchtest/info.txt
+adb shell am start -W -n "$PAKET/.MainActivity"; sleep 4
 tippe "Verzió és frissítések" desc; sleep 3
 ui > rauchtest/info-ui.xml; adb exec-out screencap -p > rauchtest/05-info.png
-if grep -q "Verzió: $AKTUELL" rauchtest/info-ui.xml; then echo "INFO: Logo öffnet Version $AKTUELL (ungarisch)" | tee rauchtest/info.txt; else echo "INFO: Version nach Tipp auf das Logo FEHLT" | tee rauchtest/info.txt; fi
+if grep -q "Verzió: $AKTUELL" rauchtest/info-ui.xml; then echo "INFO: Logo öffnet Version $AKTUELL (ungarisch)" | tee -a rauchtest/info.txt; else echo "INFO: Version nach Tipp auf das Logo FEHLT" | tee -a rauchtest/info.txt; fi
 tippe "Frissítések keresése"; sleep 8
 ui > rauchtest/info-update-ui.xml; adb exec-out screencap -p > rauchtest/06-update-suchen.png
 if grep -qE "legújabb verzió|Frissítés elérhető" rauchtest/info-update-ui.xml; then echo "INFO: Nach Updates suchen antwortet ($(grep -oE "A legújabb verzió[^\"]*|Frissítés elérhető" rauchtest/info-update-ui.xml | head -1))" | tee -a rauchtest/info.txt; else echo "INFO: Nach Updates suchen OHNE Antwort" | tee -a rauchtest/info.txt; fi
@@ -78,4 +82,6 @@ adb shell dumpsys activity activities | grep -E "topResumedActivity|mResumedActi
 # zurück auf den deutschen Server per Link (warmer WebView)
 adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d "https://wuensche.kinolel.de/" | tee rauchtest/link-de.txt
 sleep 15; adb exec-out screencap -p > rauchtest/04-link-deutsch.png
+adb logcat -d > rauchtest/logcat.txt 2>&1 || true
+grep -nE "FATAL EXCEPTION|AndroidRuntime: Process: $PAKET|ANR in $PAKET" rauchtest/logcat.txt | head -20 | tee rauchtest/abstuerze.txt
 exit 0
