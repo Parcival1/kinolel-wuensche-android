@@ -45,7 +45,18 @@ object Neuigkeiten {
                 if (gesehenText != null) liste.filter { (v, _) -> vergleiche(v, version(gesehenText)) > 0 } else liste.take(OHNE_VORGAENGER)
             }
         if (passend.isEmpty() || activity.isFinishing) return
+        dialog(activity, passend, aktuell)
+    }
 
+    /** Aus „Version und Updates“: die Neuerungen der installierten Version noch einmal */
+    fun erneutZeigen(activity: AppCompatActivity) {
+        val aktuell = version(BuildConfig.VERSION_NAME)
+        val eintraege = runCatching { lesen(activity, Sprache.aktuell(activity)) }.getOrNull() ?: return
+        val passend = eintraege.filter { (v, _) -> vergleiche(v, aktuell) <= 0 }.take(1)
+        if (passend.isNotEmpty() && !activity.isFinishing) dialog(activity, passend, aktuell)
+    }
+
+    private fun dialog(activity: AppCompatActivity, passend: List<Pair<List<Int>, List<String>>>, aktuell: List<Int>) {
         val texte = activity.inKinoLelSprache
         val text = SpannableStringBuilder()
         passend.forEachIndexed { i, (v, punkte) ->

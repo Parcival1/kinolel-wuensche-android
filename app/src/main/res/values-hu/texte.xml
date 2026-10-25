@@ -17,4 +17,11 @@
     <string name="neu_titel">Újdonságok – %1$s %2$s</string>
     <string name="neu_version">%1$s. verzió</string>
     <string name="neu_ok">Rendben</string>
+    <string name="info_oeffnen">Verzió és frissítések</string>
+    <string name="info_version">Verzió: %1$s</string>
+    <string name="update_suchen">Frissítések keresése</string>
+    <string name="neu_anzeigen">Újdonságok</string>
+    <string name="schliessen">Bezárás</string>
+    <string name="update_aktuell">A legújabb verzió van telepítve (%1$s).</string>
+    <string name="update_keine_verbindung">Most nem lehet frissítést keresni. Kérjük, ellenőrizd az internetkapcsolatot.</string>
 </resources>

@@ -1,6 +1,18 @@
 {
   "versionen": [
     {
+      "version": "1.1",
+      "de": [
+        "Tippe auf das Logo, um die Version zu sehen und nach Updates zu suchen. Außerdem Fehlerbehebungen und Verbesserungen."
+      ],
+      "hu": [
+        "Koppints a logóra a verzió megtekintéséhez és a frissítések kereséséhez. Emellett hibajavítások és fejlesztések."
+      ],
+      "en": [
+        "Tap the logo to see the version and check for updates. Also bug fixes and improvements."
+      ]
+    },
+    {
       "version": "1.0",
       "de": [
         "Meldungen der App (zum Beispiel diese hier und Hinweise zu Updates) erscheinen jetzt in der Sprache der Wunschseite – bei KinoLel Kívánságok also auf Ungarisch. Außerdem Fehlerbehebungen und Verbesserungen."

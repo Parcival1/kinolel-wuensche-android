@@ -56,7 +56,19 @@ object Aktualisierung {
 
             val ergebnis = withContext(Dispatchers.IO) { runCatching { suchen() } }
             if (activity.isFinishing || activity.isDestroyed || zeigt) return@launch
-            val neu = ergebnis.getOrNull() ?: return@launch
+            val neu = ergebnis.getOrNull()
+            if (neu == null) {
+                // Lel 25.10.: „Nach Updates suchen“ – immer eine Antwort
+                if (vonHand) {
+                    val texte = activity.inKinoLelSprache
+                    AlertDialog.Builder(texte)
+                        .setMessage(if (ergebnis.isFailure) texte.getString(R.string.update_keine_verbindung)
+                                    else texte.getString(R.string.update_aktuell, BuildConfig.VERSION_NAME))
+                        .setPositiveButton(R.string.neu_ok, null)
+                        .show()
+                }
+                return@launch
+            }
             val spaeterGewaehlt = vorlieben.getString("spaeter_version", null) == neu.version &&
                 jetzt - vorlieben.getLong("spaeter_zeit", 0) < SPAETER_MS
             if (spaeterGewaehlt && !vonHand) return@launch

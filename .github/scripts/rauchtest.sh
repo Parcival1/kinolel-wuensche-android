@@ -7,7 +7,8 @@ PAKET=$(grep '^APPLICATION_ID=' marke.properties | cut -d= -f2)
 ui() { adb exec-out uiautomator dump /dev/tty 2>/dev/null; }
 # Text antippen (Mitte seines Rahmens laut uiautomator)
 tippe() {
-  punkt=$(ui | python3 -c 'import re,sys; m=re.search(r"text=\"%s\"[^>]*bounds=\"\[(\d+),(\d+)\]\[(\d+),(\d+)\]\"" % re.escape(sys.argv[1]), sys.stdin.read()); print("%d %d" % ((int(m[1])+int(m[3]))//2, (int(m[2])+int(m[4]))//2) if m else "")' "$1")
+  attr=text; [ "${2:-}" = desc ] && attr=content-desc
+  punkt=$(ui | python3 -c 'import re,sys; m=re.search(r"%s=\"%s\"[^>]*bounds=\"\[(\d+),(\d+)\]\[(\d+),(\d+)\]\"" % (sys.argv[2], re.escape(sys.argv[1])), sys.stdin.read()); print("%d %d" % ((int(m[1])+int(m[3]))//2, (int(m[2])+int(m[4]))//2) if m else "")' "$1" "$attr")
   [ -n "$punkt" ] && adb shell input tap $punkt
 }
 # Emulator-Systemmeldung „… isn't responding“ (z. B. Pixel Launcher nach dem Update) verdeckt sonst die Meldung der App
@@ -47,6 +48,19 @@ adb shell am force-stop "$PAKET"
 adb shell am start -W -n "$PAKET/.MainActivity"
 sleep 6
 if ui | grep -qE "Neu in |New in |Újdonságok"; then echo "NEUIGKEITEN: FEHLER – zweiter Start zeigt sie erneut" | tee -a rauchtest/neuigkeiten.txt; else echo "NEUIGKEITEN: zweiter Start ohne Meldung (richtig)" | tee -a rauchtest/neuigkeiten.txt; fi
+# Lel 25.10.: Logo antippen -> Version und „Nach Updates suchen“ (App noch auf Magyar -> ungarisch)
+tippe "Verzió és frissítések" desc; sleep 3
+ui > rauchtest/info-ui.xml; adb exec-out screencap -p > rauchtest/05-info.png
+if grep -q "Verzió: $AKTUELL" rauchtest/info-ui.xml; then echo "INFO: Logo öffnet Version $AKTUELL (ungarisch)" | tee rauchtest/info.txt; else echo "INFO: Version nach Tipp auf das Logo FEHLT" | tee rauchtest/info.txt; fi
+tippe "Frissítések keresése"; sleep 8
+ui > rauchtest/info-update-ui.xml; adb exec-out screencap -p > rauchtest/06-update-suchen.png
+if grep -qE "legújabb verzió|Frissítés elérhető" rauchtest/info-update-ui.xml; then echo "INFO: Nach Updates suchen antwortet ($(grep -oE "A legújabb verzió[^\"]*|Frissítés elérhető" rauchtest/info-update-ui.xml | head -1))" | tee -a rauchtest/info.txt; else echo "INFO: Nach Updates suchen OHNE Antwort" | tee -a rauchtest/info.txt; fi
+tippe "Rendben"; tippe "Később"; sleep 2
+tippe "Verzió és frissítések" desc; sleep 3
+tippe "Újdonságok"; sleep 3
+ui > rauchtest/info-neu-ui.xml; adb exec-out screencap -p > rauchtest/07-was-ist-neu-erneut.png
+if grep -q "Újdonságok – KinoLel Kívánságok $AKTUELL" rauchtest/info-neu-ui.xml; then echo "INFO: Was ist neu erneut ($AKTUELL)" | tee -a rauchtest/info.txt; else echo "INFO: Was ist neu erneut FEHLT" | tee -a rauchtest/info.txt; fi
+tippe "Rendben"; sleep 1
 tippe "Deutsch"; sleep 3
 adb shell am force-stop "$PAKET"
 adb shell am start -W -n "$PAKET/.MainActivity"

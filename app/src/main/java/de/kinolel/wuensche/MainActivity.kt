@@ -25,6 +25,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.addCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
             web.loadUrl(server)
         }
         // einmal nach einem Update: was ist neu – in der Sprache der Wunschseite (Lel 25.10.), daher erst, wenn sie bekannt ist
-        Sprache.ermitteln(this) { if (!isDestroyed) Neuigkeiten.zeigenFallsNeu(this) }
+        Sprache.wennBekannt { if (!isDestroyed) Neuigkeiten.zeigenFallsNeu(this) }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -82,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Aktualisierung.fortsetzen(this)
         // KinoLel (Lel 22.10.2026): bei jedem Öffnen/Zurückkehren nach Updates suchen (Hinweis in der Sprache der Wunschseite)
-        Sprache.ermitteln(this) { if (!isDestroyed) Aktualisierung.pruefen(this) }
+        Sprache.wennBekannt { if (!isDestroyed) Aktualisierung.pruefen(this) }
     }
 
     override fun onPause() {
@@ -102,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         if (ziel != server) {
             server = ziel
             aktualisiereLeiste()
-            Sprache.serverGewechselt(this)
+            Sprache.serverGewechselt()
         }
         web.loadUrl(uri.toString())
         return true
@@ -118,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         if (ziel == server && web.url?.startsWith(ziel) == true) return
         server = ziel
         aktualisiereLeiste()
-        Sprache.serverGewechselt(this)
+        Sprache.serverGewechselt()
         web.loadUrl(ziel)
     }
 
@@ -150,11 +151,16 @@ class MainActivity : AppCompatActivity() {
             setBackgroundColor(farbe(R.color.grund))
             setPadding(dp(12), dp(6), dp(8), dp(6))
         }
+        // Lel 25.10.: „Mache das Logo der App an sich in der App anklickbar, sodass man darunter nach z. B. Updates suchen
+        // kann und die aktuelle Version angezeigt wird.“ – Logo und Name öffnen „Version und Updates“
         leiste.addView(ImageView(this).apply {
             setImageResource(R.drawable.leiste_logo)
             adjustViewBounds = true
+            contentDescription = inKinoLelSprache.getString(R.string.info_oeffnen)
+            setOnClickListener { infoZeigen() }
         }, LinearLayout.LayoutParams(dp(32), dp(32)))
         titel = TextView(this).apply {
+            setOnClickListener { infoZeigen() }
             setTextColor(farbe(R.color.text))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setPadding(dp(10), 0, dp(8), 0)
@@ -235,6 +241,19 @@ class MainActivity : AppCompatActivity() {
         return wurzel
     }
 
+    /** Version, „Nach Updates suchen“, „Was ist neu“ – in der Sprache der Wunschseite */
+    private fun infoZeigen() {
+        val texte = inKinoLelSprache
+        val name = if (Sprache.aktuell(this) == "hu") "KinoLel Kívánságok" else BuildConfig.APP_NAME
+        AlertDialog.Builder(texte)
+            .setTitle(name)
+            .setMessage(texte.getString(R.string.info_version, BuildConfig.VERSION_NAME))
+            .setPositiveButton(R.string.update_suchen) { _, _ -> Aktualisierung.pruefen(this, vonHand = true) }
+            .setNeutralButton(R.string.neu_anzeigen) { _, _ -> Neuigkeiten.erneutZeigen(this) }
+            .setNegativeButton(R.string.schliessen, null)
+            .show()
+    }
+
     private fun umschalter(text: String, beiKlick: () -> Unit) = TextView(this).apply {
         this.text = text
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
@@ -251,7 +270,7 @@ class MainActivity : AppCompatActivity() {
                 if (ziel != server) {
                     server = ziel
                     aktualisiereLeiste()
-                    Sprache.serverGewechselt(this@MainActivity)
+                    Sprache.serverGewechselt()
                 }
                 return false
             }
@@ -268,6 +287,10 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
             fehler.visibility = View.GONE
+        }
+
+        override fun onPageFinished(view: WebView, url: String) {
+            Sprache.ausSeite(view)
         }
 
         override fun onReceivedError(view: WebView, anfrage: WebResourceRequest, error: WebResourceError) {

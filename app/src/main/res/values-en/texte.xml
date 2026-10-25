@@ -18,4 +18,11 @@
     <string name="neu_titel">New in %1$s %2$s</string>
     <string name="neu_version">Version %1$s</string>
     <string name="neu_ok">Got it</string>
+    <string name="info_oeffnen">Version and updates</string>
+    <string name="info_version">Version %1$s</string>
+    <string name="update_suchen">Check for updates</string>
+    <string name="neu_anzeigen">What\'s new</string>
+    <string name="schliessen">Close</string>
+    <string name="update_aktuell">You have the latest version (%1$s).</string>
+    <string name="update_keine_verbindung">Can\'t check for updates right now. Please check your internet connection.</string>
 </resources>
