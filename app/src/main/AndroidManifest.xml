@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Auto-Update (APK aus GitHub-Releases installieren) -->
@@ -36,6 +37,18 @@
                 <data android:host="${hostHu}" />
             </intent-filter>
         </activity>
+
+        <!-- Ohne EmojiCompat (Emojis zeigt die Wunschseite selbst): sonst hängt die App am Schriften-Dienst der
+             Google-Play-Dienste und wird mit beendet, wenn diese neu starten (im Emulator mehrfach gesehen) -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+                tools:node="remove" />
+        </provider>
 
         <!-- Hintergrundprüfung der eigenen Wünsche (JobScheduler; nur das System darf sie starten) -->
         <service
