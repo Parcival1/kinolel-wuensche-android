@@ -63,17 +63,16 @@ jobs:
           path: ausgabe/*.apk
           if-no-files-found: error
 
-      - name: Vorab-Version veröffentlichen (nur bei Tag v*)
+      - name: Vorab-Version als Entwurf anlegen (nur bei Tag v*; veröffentlicht erst nach grünem Test)
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" ausgabe/*.apk --prerelease --title "Testversion $GITHUB_REF_NAME (KinoLel Wünsche, Android)" --notes-file TESTANLEITUNG.md
+        run: gh release create "$GITHUB_REF_NAME" ausgabe/*.apk --draft --prerelease --title "Testversion $GITHUB_REF_NAME (KinoLel Wünsche, Android)" --notes-file TESTANLEITUNG.md
 
   rauchtest:
     name: Rauchtest im Emulator
     needs: build
     runs-on: ubuntu-26.04
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
@@ -102,3 +101,20 @@ jobs:
         with:
           name: rauchtest-bilder
           path: rauchtest/
+      - name: Ergebnis prüfen
+        run: |
+          cat rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt 2>/dev/null || true
+          if grep -hE "FEHLT|FEHLER|NICHT ungarisch|OHNE Antwort|nicht geprüft" rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt; then echo "::error::Rauchtest mit Fehlern"; exit 1; fi
+          if [ -s rauchtest/abstuerze.txt ]; then cat rauchtest/abstuerze.txt; echo "::error::Absturz im logcat"; exit 1; fi
+
+  veroeffentlichen:
+    # Lel 25.10.: erst nach grünem Test sichtbar (Entwurf -> veröffentlicht); apps.json übernimmt nur veröffentlichte
+    name: Release veröffentlichen (nur bei Tag v*, nach grünem Test)
+    needs: [build, rauchtest]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Entwurf veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false
