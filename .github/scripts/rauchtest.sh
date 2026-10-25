@@ -29,12 +29,10 @@ if [ -n "$VOR" ] && curl -sSL -o vorversion.apk "$VOR"; then
   adb shell am start -W -n "$PAKET/.MainActivity"
   sleep 10
   # Lel 25.10.: in der App „Magyar“ gewählt (KinoLel Kívánságok), das Gerät auf Deutsch -> „Was ist neu“ ungarisch
-  # umschalten und nachsehen (Leiste zeigt dann „KinoLel Kívánságok“) – ein Systemdialog kann den Tipp schlucken
-  for versuch in 1 2 3; do
-    systemdialog_weg; tippe "Magyar"; sleep 6
-    if ui | grep -q "KinoLel Kívánságok"; then echo "Magyar gewählt (Versuch $versuch)"; break; fi
-  done
-  sleep 2
+  # Magyar wählen wie ein Link auf kivansagok.kinolel.de (die App merkt sich den Server) – zuverlässiger als ein Tipp:
+  # uiautomator liefert bei der animierten Wunschseite nicht immer ein Abbild
+  adb shell am start -W -n "$PAKET/.MainActivity" -a android.intent.action.VIEW -d "https://kivansagok.kinolel.de/"
+  sleep 10
   adb shell am force-stop "$PAKET"
 fi
 adb shell cmd locale set-app-locales "$PAKET" --locales de-DE || true
@@ -58,8 +56,11 @@ if ui | grep -qE "Neu in |New in |Újdonságok"; then echo "NEUIGKEITEN: FEHLER 
 pidof_vorher=$(adb shell pidof "$PAKET" | tr -d "\r")
 echo "INFO: App-Prozess vor dem Logo-Test: ${pidof_vorher:-keiner}" | tee rauchtest/info.txt
 adb shell am start -W -n "$PAKET/.MainActivity"; sleep 4
-tippe "Verzió és frissítések" desc; sleep 3
-ui > rauchtest/info-ui.xml; adb exec-out screencap -p > rauchtest/05-info.png
+for versuch in 1 2 3; do
+  tippe "Verzió és frissítések" desc; sleep 3
+  ui > rauchtest/info-ui.xml
+  grep -q "Verzió: " rauchtest/info-ui.xml && break
+done; adb exec-out screencap -p > rauchtest/05-info.png
 if grep -q "Verzió: $AKTUELL" rauchtest/info-ui.xml; then echo "INFO: Logo öffnet Version $AKTUELL (ungarisch)" | tee -a rauchtest/info.txt; else echo "INFO: Version nach Tipp auf das Logo FEHLT" | tee -a rauchtest/info.txt; fi
 tippe "Frissítések keresése"; sleep 8
 ui > rauchtest/info-update-ui.xml; adb exec-out screencap -p > rauchtest/06-update-suchen.png
