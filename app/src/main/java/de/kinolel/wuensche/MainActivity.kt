@@ -69,7 +69,8 @@ class MainActivity : AppCompatActivity() {
         } else if (!oeffneLink(intent)) {
             web.loadUrl(server)
         }
-        Neuigkeiten.zeigenFallsNeu(this)   // einmal nach einem Update: was ist neu
+        // einmal nach einem Update: was ist neu – in der Sprache der Wunschseite (Lel 25.10.), daher erst, wenn sie bekannt ist
+        Sprache.ermitteln(this) { if (!isDestroyed) Neuigkeiten.zeigenFallsNeu(this) }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -80,8 +81,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Aktualisierung.fortsetzen(this)
-        // KinoLel (Lel 22.10.2026): bei jedem Öffnen/Zurückkehren nach Updates suchen
-        Aktualisierung.pruefen(this)
+        // KinoLel (Lel 22.10.2026): bei jedem Öffnen/Zurückkehren nach Updates suchen (Hinweis in der Sprache der Wunschseite)
+        Sprache.ermitteln(this) { if (!isDestroyed) Aktualisierung.pruefen(this) }
     }
 
     override fun onPause() {
@@ -101,6 +102,7 @@ class MainActivity : AppCompatActivity() {
         if (ziel != server) {
             server = ziel
             aktualisiereLeiste()
+            Sprache.serverGewechselt(this)
         }
         web.loadUrl(uri.toString())
         return true
@@ -116,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         if (ziel == server && web.url?.startsWith(ziel) == true) return
         server = ziel
         aktualisiereLeiste()
+        Sprache.serverGewechselt(this)
         web.loadUrl(ziel)
     }
 
@@ -248,6 +251,7 @@ class MainActivity : AppCompatActivity() {
                 if (ziel != server) {
                     server = ziel
                     aktualisiereLeiste()
+                    Sprache.serverGewechselt(this@MainActivity)
                 }
                 return false
             }

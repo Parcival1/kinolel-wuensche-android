@@ -37,7 +37,7 @@ object Neuigkeiten {
         }.getOrDefault(false)
         if (!aktualisiert) return
 
-        val eintraege = runCatching { lesen(activity, sprache(activity)) }.onFailure { Log.w("KinoLelWuensche", "Neuigkeiten", it) }
+        val eintraege = runCatching { lesen(activity, Sprache.aktuell(activity)) }.onFailure { Log.w("KinoLelWuensche", "Neuigkeiten", it) }
             .getOrNull() ?: return
         val passend = eintraege
             .filter { (v, _) -> vergleiche(v, aktuell) <= 0 }
@@ -46,28 +46,23 @@ object Neuigkeiten {
             }
         if (passend.isEmpty() || activity.isFinishing) return
 
+        val texte = activity.inKinoLelSprache
         val text = SpannableStringBuilder()
         passend.forEachIndexed { i, (v, punkte) ->
             if (passend.size > 1) {
                 if (i > 0) text.append("\n")
                 val start = text.length
-                text.append(activity.getString(R.string.neu_version, v.joinToString(".")))
+                text.append(texte.getString(R.string.neu_version, v.joinToString(".")))
                 text.setSpan(StyleSpan(Typeface.BOLD), start, text.length, 0)
                 text.append("\n")
             }
             punkte.forEach { text.append("• ").append(it).append("\n") }
         }
-        AlertDialog.Builder(activity)
-            .setTitle(activity.getString(R.string.neu_titel, if (sprache(activity) == "hu") "KinoLel Kívánságok" else BuildConfig.APP_NAME, aktuell.joinToString(".")))
+        AlertDialog.Builder(texte)
+            .setTitle(texte.getString(R.string.neu_titel, if (Sprache.aktuell(activity) == "hu") "KinoLel Kívánságok" else BuildConfig.APP_NAME, aktuell.joinToString(".")))
             .setMessage(text.trimEnd('\n'))
             .setPositiveButton(R.string.neu_ok, null)
             .show()
-    }
-
-    private fun sprache(context: Context): String = when (context.resources.configuration.locales[0].language) {
-        "hu" -> "hu"
-        "en" -> "en"
-        else -> "de"
     }
 
     /** Einträge (neueste zuerst): Version -> Stichpunkte in der Sprache (Ersatz: Deutsch) */

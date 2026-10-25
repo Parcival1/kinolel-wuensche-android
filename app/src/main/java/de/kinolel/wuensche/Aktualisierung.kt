@@ -61,9 +61,10 @@ object Aktualisierung {
                 jetzt - vorlieben.getLong("spaeter_zeit", 0) < SPAETER_MS
             if (spaeterGewaehlt && !vonHand) return@launch
             zeigt = true
-            AlertDialog.Builder(activity)
+            val texte = activity.inKinoLelSprache
+            AlertDialog.Builder(texte)
                 .setTitle(R.string.update_titel)
-                .setMessage(activity.getString(R.string.update_text, BuildConfig.APP_NAME, neu.version))
+                .setMessage(texte.getString(R.string.update_text, BuildConfig.APP_NAME, neu.version))
                 .setPositiveButton(R.string.update_jetzt) { _, _ -> laden(activity, neu) }
                 .setNegativeButton(R.string.update_spaeter) { _, _ -> vorlieben.edit().putString("spaeter_version", neu.version).putLong("spaeter_zeit", System.currentTimeMillis()).apply() }
                 .setOnDismissListener { zeigt = false }
@@ -142,7 +143,7 @@ object Aktualisierung {
             max = 100
             setPadding(64, 32, 64, 16)
         }
-        val dialog = AlertDialog.Builder(activity)
+        val dialog = AlertDialog.Builder(activity.inKinoLelSprache)
             .setTitle(R.string.update_laedt)
             .setView(fortschritt)
             .setCancelable(false)
@@ -177,7 +178,7 @@ object Aktualisierung {
             }
             dialog.dismiss()
             if (datei == null || datei.length() < 1_000_000) {
-                Toast.makeText(activity, R.string.update_fehler, Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, activity.inKinoLelSprache.getText(R.string.update_fehler), Toast.LENGTH_LONG).show()
                 return@launch
             }
             installieren(activity, datei)
@@ -190,9 +191,10 @@ object Aktualisierung {
     private fun installieren(activity: AppCompatActivity, datei: File) {
         if (!darfInstallieren(activity)) {
             ausstehend = datei
-            AlertDialog.Builder(activity)
+            val texte = activity.inKinoLelSprache
+            AlertDialog.Builder(texte)
                 .setTitle(R.string.update_erlaubnis_titel)
-                .setMessage(activity.getString(R.string.update_erlaubnis_text, BuildConfig.APP_NAME))
+                .setMessage(texte.getString(R.string.update_erlaubnis_text, BuildConfig.APP_NAME))
                 .setPositiveButton(R.string.update_erlaubnis_oeffnen) { _, _ ->
                     activity.startActivity(
                         Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${activity.packageName}")),
