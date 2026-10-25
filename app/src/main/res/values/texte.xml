@@ -25,4 +25,20 @@
     <string name="schliessen">Schließen</string>
     <string name="update_aktuell">Du hast die neueste Version (%1$s).</string>
     <string name="update_keine_verbindung">Gerade kann nicht nach Updates gesucht werden. Bitte Internetverbindung prüfen.</string>
+    <string name="benachrichtigung_kanal">Wünsche</string>
+    <string name="benachrichtigung_kanal_text">Wenn dein Wunsch genehmigt oder verfügbar ist</string>
+    <string name="benachrichtigung_genehmigt_titel">Wunsch genehmigt</string>
+    <string name="benachrichtigung_genehmigt_text">Deine Anfrage „%1$s“ wurde genehmigt.</string>
+    <string name="benachrichtigung_teilweise_titel">Teilweise verfügbar</string>
+    <string name="benachrichtigung_teilweise_text">„%1$s“ ist teilweise verfügbar – die ersten Folgen sind da.</string>
+    <string name="benachrichtigung_verfuegbar_titel">Jetzt verfügbar</string>
+    <string name="benachrichtigung_verfuegbar_text">„%1$s“ ist jetzt in KinoLel verfügbar.</string>
+    <string name="benachrichtigung_abgelehnt_titel">Wunsch abgelehnt</string>
+    <string name="benachrichtigung_abgelehnt_text">Deine Anfrage „%1$s“ wurde abgelehnt.</string>
+    <string name="benachrichtigung_ohne_titel">dein Wunsch</string>
+    <string name="benachrichtigung_frage_titel">Benachrichtigungen</string>
+    <string name="benachrichtigung_frage_text">Möchtest du eine Nachricht bekommen, wenn dein Wunsch genehmigt oder verfügbar ist?</string>
+    <string name="benachrichtigung_ja">Ja, gerne</string>
+    <string name="benachrichtigung_nein">Nein, danke</string>
+    <string name="benachrichtigung_schalter">Benachrichtigungen</string>
 </resources>

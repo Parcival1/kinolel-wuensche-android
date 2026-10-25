@@ -25,4 +25,20 @@
     <string name="schliessen">Close</string>
     <string name="update_aktuell">You have the latest version (%1$s).</string>
     <string name="update_keine_verbindung">Can\'t check for updates right now. Please check your internet connection.</string>
+    <string name="benachrichtigung_kanal">Wishes</string>
+    <string name="benachrichtigung_kanal_text">When your request is approved or available</string>
+    <string name="benachrichtigung_genehmigt_titel">Request approved</string>
+    <string name="benachrichtigung_genehmigt_text">Your request “%1$s” was approved.</string>
+    <string name="benachrichtigung_teilweise_titel">Partly available</string>
+    <string name="benachrichtigung_teilweise_text">“%1$s” is partly available – the first episodes are here.</string>
+    <string name="benachrichtigung_verfuegbar_titel">Now available</string>
+    <string name="benachrichtigung_verfuegbar_text">“%1$s” is now available in KinoLel.</string>
+    <string name="benachrichtigung_abgelehnt_titel">Request declined</string>
+    <string name="benachrichtigung_abgelehnt_text">Your request “%1$s” was declined.</string>
+    <string name="benachrichtigung_ohne_titel">your request</string>
+    <string name="benachrichtigung_frage_titel">Notifications</string>
+    <string name="benachrichtigung_frage_text">Would you like to be notified when your request is approved or available?</string>
+    <string name="benachrichtigung_ja">Yes, please</string>
+    <string name="benachrichtigung_nein">No, thanks</string>
+    <string name="benachrichtigung_schalter">Notifications</string>
 </resources>

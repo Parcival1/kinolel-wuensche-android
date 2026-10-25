@@ -25,7 +25,12 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.addCallback
+import android.Manifest
+import android.os.Build
+import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -50,6 +55,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fehler: LinearLayout
 
     private val vorlieben by lazy { getSharedPreferences("kinolel_wuensche", Context.MODE_PRIVATE) }
+    private var fragtNachBenachrichtigungen = false
+
+    // Android 13+: Erlaubnis für Benachrichtigungen (einmal, nach freundlicher Frage)
+    private val erlaubnis = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        if (!ok) Benachrichtigungen.setzen(this, false) else Benachrichtigungen.planen(this)
+    }
 
     private var server: String
         get() = vorlieben.getString("server", null) ?: standardServer()
@@ -71,12 +82,45 @@ class MainActivity : AppCompatActivity() {
             web.loadUrl(server)
         }
         // einmal nach einem Update: was ist neu – in der Sprache der Wunschseite (Lel 25.10.), daher erst, wenn sie bekannt ist
-        Sprache.wennBekannt { if (!isDestroyed) Neuigkeiten.zeigenFallsNeu(this) }
+        Sprache.wennBekannt { if (!isDestroyed) Neuigkeiten.zeigenFallsNeu(this) { benachrichtigungenFragen() } }
+        // Lel 25.10.: Benachrichtigungen, wenn ein Wunsch genehmigt oder verfügbar ist
+        Benachrichtigungen.kanalAnlegen(this)
+        Benachrichtigungen.planen(this)
+        Sprache.beiAnmeldung = { if (!isDestroyed) benachrichtigungenFragen() }
+        testPruefen(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         oeffneLink(intent)
+        testPruefen(intent)
+    }
+
+    /** Einmal fragen, sobald man angemeldet ist (nicht über „Was ist neu“ oder einen anderen Dialog) */
+    private fun benachrichtigungenFragen() {
+        if (fragtNachBenachrichtigungen || Benachrichtigungen.entschieden(this) || Sprache.angemeldeteServer(this).isEmpty() ||
+            isFinishing || isDestroyed) return
+        fragtNachBenachrichtigungen = true
+        val texte = inKinoLelSprache
+        AlertDialog.Builder(texte)
+            .setTitle(R.string.benachrichtigung_frage_titel)
+            .setMessage(R.string.benachrichtigung_frage_text)
+            .setPositiveButton(R.string.benachrichtigung_ja) { _, _ -> benachrichtigungenEinschalten() }
+            .setNegativeButton(R.string.benachrichtigung_nein) { _, _ -> Benachrichtigungen.setzen(this, false) }
+            .setOnDismissListener { fragtNachBenachrichtigungen = false }
+            .show()
+    }
+
+    private fun benachrichtigungenEinschalten() {
+        Benachrichtigungen.setzen(this, true)
+        if (!Benachrichtigungen.erlaubt(this) && Build.VERSION.SDK_INT >= 33) erlaubnis.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    /** Nur Debug-Version (Rauchtest): sofort prüfen, Anfrage-Stände aus files/test_anfragen.json */
+    private fun testPruefen(intent: Intent?) {
+        if (BuildConfig.DEBUG && intent?.getBooleanExtra(Benachrichtigungen.TEST_EXTRA, false) == true) {
+            Benachrichtigungen.pruefen(this) { Log.i("KinoLelWuensche", "Test-Prüfung fertig") }
+        }
     }
 
     override fun onResume() {
@@ -245,9 +289,25 @@ class MainActivity : AppCompatActivity() {
     private fun infoZeigen() {
         val texte = inKinoLelSprache
         val name = if (Sprache.aktuell(this) == "hu") "KinoLel Kívánságok" else BuildConfig.APP_NAME
+        val inhalt = LinearLayout(texte).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(8), dp(24), 0)
+            addView(TextView(texte).apply {
+                text = texte.getString(R.string.info_version, BuildConfig.VERSION_NAME)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            })
+            addView(SwitchCompat(texte).apply {
+                text = texte.getString(R.string.benachrichtigung_schalter)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+                isChecked = Benachrichtigungen.an(this@MainActivity) && Benachrichtigungen.erlaubt(this@MainActivity)
+                setOnCheckedChangeListener { _, an ->
+                    if (an) benachrichtigungenEinschalten() else Benachrichtigungen.setzen(this@MainActivity, false)
+                }
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) })
+        }
         AlertDialog.Builder(texte)
             .setTitle(name)
-            .setMessage(texte.getString(R.string.info_version, BuildConfig.VERSION_NAME))
+            .setView(inhalt)
             .setPositiveButton(R.string.update_suchen) { _, _ -> Aktualisierung.pruefen(this, vonHand = true) }
             .setNeutralButton(R.string.neu_anzeigen) { _, _ -> Neuigkeiten.erneutZeigen(this) }
             .setNegativeButton(R.string.schliessen, null)

@@ -19,6 +19,7 @@ import java.util.Locale
  */
 object Sprache {
     private const val VORLIEBEN = "kinolel_wuensche_sprache"
+    private const val ANMELDUNG = "kinolel_wuensche_anmeldung"
     private const val FRIST_MS = 8_000L
     private const val ABFRAGE_MS = 400L
     private val erlaubt = setOf("de", "hu", "en")
@@ -26,6 +27,8 @@ object Sprache {
     // nur auf dem Hauptthread benutzt
     private val warten = mutableListOf<() -> Unit>()
     private var bekannt = false // in diesem Start schon von der Seite gelesen (für den gewählten Server)
+    /** Die Seite meldet eine Anmeldung (MainActivity: einmal nach Benachrichtigungen fragen) */
+    var beiAnmeldung: (() -> Unit)? = null
 
     /** Gewählter Server (Umschalter Deutsch/Magyar, gemerkt in MainActivity) */
     private fun server(context: Context): String =
@@ -42,6 +45,25 @@ object Sprache {
         context.getSharedPreferences(VORLIEBEN, Context.MODE_PRIVATE).getString(host, null)?.takeIf { it in erlaubt }
 
     fun aktuell(context: Context): String = gemerkt(context, Uri.parse(server(context)).host) ?: geraet(context)
+
+    /** Sprache eines Servers (Benachrichtigungen): gemerkt, sonst Kívánságok ungarisch, sonst Gerät */
+    fun fuerServer(context: Context, host: String): String =
+        gemerkt(context, host) ?: if (Uri.parse(BuildConfig.SERVER_HU).host.equals(host, ignoreCase = true)) "hu" else geraet(context)
+
+    fun kontextFuerServer(context: Context, host: String): Context {
+        val konfiguration = Configuration(context.resources.configuration).apply { setLocale(Locale(fuerServer(context, host))) }
+        return context.createConfigurationContext(konfiguration)
+    }
+
+    /** Server, auf denen man in der App zuletzt angemeldet war (nur dort fragt die Hintergrundprüfung) */
+    fun angemeldeteServer(context: Context): List<String> {
+        val v = context.getSharedPreferences(ANMELDUNG, Context.MODE_PRIVATE)
+        return listOf(BuildConfig.SERVER_DE, BuildConfig.SERVER_HU).mapNotNull { Uri.parse(it).host }.filter { v.getBoolean(it, false) }
+    }
+
+    fun abgemeldet(context: Context, host: String) {
+        context.getSharedPreferences(ANMELDUNG, Context.MODE_PRIVATE).edit().putBoolean(host, false).apply()
+    }
 
     /** [aktion] ausführen, sobald die Seite ihre Sprache gemeldet hat – spätestens nach [FRIST_MS] (dann die gemerkte) */
     fun wennBekannt(aktion: () -> Unit) {
@@ -76,6 +98,10 @@ object Sprache {
                             app.getSharedPreferences(VORLIEBEN, Context.MODE_PRIVATE).edit().putString(host, sprache).apply()
                             Log.i("KinoLelWuensche", "Sprache der Wunschseite: $sprache ($host)")
                         }
+                        // „+“ am Ende: angemeldet (für die Benachrichtigungen)
+                        val angemeldet = text.endsWith("+")
+                        app.getSharedPreferences(ANMELDUNG, Context.MODE_PRIVATE).edit().putBoolean(host, angemeldet).apply()
+                        if (angemeldet) beiAnmeldung?.invoke()
                         bekannt = true
                         val faellig = warten.toList()
                         warten.clear()
@@ -95,10 +121,12 @@ object Sprache {
             (async function () {
               var l = '';
               try { l = (await (await fetch('/api/v1/settings/public')).json()).locale || ''; } catch (e) {}
+              var angemeldet = false;
               if (!location.pathname.startsWith('/login')) {
                 try {
                   var r = await fetch('/api/v1/auth/me');
                   if (r.ok) {
+                    angemeldet = true;
                     var u = await r.json();
                     var eigene = u.settings ? u.settings.locale : undefined;
                     if (eigene === undefined) {
@@ -109,7 +137,7 @@ object Sprache {
                   }
                 } catch (e) {}
               }
-              window.__kinolelSprache = l || '-';
+              window.__kinolelSprache = (l || '-') + (angemeldet ? '+' : '');
             })();
           }
           return window.__kinolelSprache;

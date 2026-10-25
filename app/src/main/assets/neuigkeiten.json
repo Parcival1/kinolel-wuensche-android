@@ -1,6 +1,18 @@
 {
   "versionen": [
     {
+      "version": "1.2",
+      "de": [
+        "Du bekommst jetzt eine Benachrichtigung, wenn dein Wunsch genehmigt oder verfügbar ist. Ein- und ausschalten: Tippe auf das Logo."
+      ],
+      "hu": [
+        "Mostantól értesítést kapsz, ha a kívánságodat jóváhagyták vagy elérhető. Be- és kikapcsolás: koppints a logóra."
+      ],
+      "en": [
+        "You now get a notification when your request is approved or available. To turn it on or off, tap the logo."
+      ]
+    },
+    {
       "version": "1.1",
       "de": [
         "Tippe auf das Logo, um die Version zu sehen und nach Updates zu suchen. Außerdem Fehlerbehebungen und Verbesserungen."

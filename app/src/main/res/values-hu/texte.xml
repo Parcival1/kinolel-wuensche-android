@@ -24,4 +24,20 @@
     <string name="schliessen">Bezárás</string>
     <string name="update_aktuell">A legújabb verzió van telepítve (%1$s).</string>
     <string name="update_keine_verbindung">Most nem lehet frissítést keresni. Kérjük, ellenőrizd az internetkapcsolatot.</string>
+    <string name="benachrichtigung_kanal">Kívánságok</string>
+    <string name="benachrichtigung_kanal_text">Ha a kívánságodat jóváhagyták vagy elérhető</string>
+    <string name="benachrichtigung_genehmigt_titel">Kívánság jóváhagyva</string>
+    <string name="benachrichtigung_genehmigt_text">A(z) „%1$s” kérésedet jóváhagyták.</string>
+    <string name="benachrichtigung_teilweise_titel">Részben elérhető</string>
+    <string name="benachrichtigung_teilweise_text">A(z) „%1$s” részben elérhető – az első részek már megvannak.</string>
+    <string name="benachrichtigung_verfuegbar_titel">Most elérhető</string>
+    <string name="benachrichtigung_verfuegbar_text">A(z) „%1$s” most már elérhető a KinoLelben.</string>
+    <string name="benachrichtigung_abgelehnt_titel">Kívánság elutasítva</string>
+    <string name="benachrichtigung_abgelehnt_text">A(z) „%1$s” kérésedet elutasították.</string>
+    <string name="benachrichtigung_ohne_titel">a kívánságod</string>
+    <string name="benachrichtigung_frage_titel">Értesítések</string>
+    <string name="benachrichtigung_frage_text">Szeretnél értesítést kapni, ha a kívánságodat jóváhagyták vagy elérhető?</string>
+    <string name="benachrichtigung_ja">Igen, kérem</string>
+    <string name="benachrichtigung_nein">Nem, köszönöm</string>
+    <string name="benachrichtigung_schalter">Értesítések</string>
 </resources>

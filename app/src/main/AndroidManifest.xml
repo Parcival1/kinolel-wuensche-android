@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Auto-Update (APK aus GitHub-Releases installieren) -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Benachrichtigungen (Lel 25.10.): genehmigt / verfügbar; Prüfung nur mit Netz (Bedingung der Hintergrundprüfung) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -33,6 +36,12 @@
                 <data android:host="${hostHu}" />
             </intent-filter>
         </activity>
+
+        <!-- Hintergrundprüfung der eigenen Wünsche (JobScheduler; nur das System darf sie starten) -->
+        <service
+            android:name=".WunschPruefung"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <provider
             android:name=".UpdateDateiProvider"

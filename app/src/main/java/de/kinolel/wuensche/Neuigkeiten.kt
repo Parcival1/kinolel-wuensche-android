@@ -23,11 +23,11 @@ object Neuigkeiten {
     private const val DATEI = "neuigkeiten.json"
     private const val OHNE_VORGAENGER = 2
 
-    fun zeigenFallsNeu(activity: AppCompatActivity) {
+    fun zeigenFallsNeu(activity: AppCompatActivity, danach: () -> Unit = {}) {
         val vorlieben = activity.getSharedPreferences(VORLIEBEN, Context.MODE_PRIVATE)
         val aktuell = version(BuildConfig.VERSION_NAME)
         val gesehenText = vorlieben.getString(GESEHEN, null)
-        if (gesehenText != null && vergleiche(version(gesehenText), aktuell) >= 0) return
+        if (gesehenText != null && vergleiche(version(gesehenText), aktuell) >= 0) return danach()
         vorlieben.edit().putString(GESEHEN, aktuell.joinToString(".")).apply()
 
         // Frisch installiert (noch nie aktualisiert) -> keine Meldung
@@ -35,17 +35,17 @@ object Neuigkeiten {
             val info = activity.packageManager.getPackageInfo(activity.packageName, 0)
             info.lastUpdateTime > info.firstInstallTime
         }.getOrDefault(false)
-        if (!aktualisiert) return
+        if (!aktualisiert) return danach()
 
         val eintraege = runCatching { lesen(activity, Sprache.aktuell(activity)) }.onFailure { Log.w("KinoLelWuensche", "Neuigkeiten", it) }
-            .getOrNull() ?: return
+            .getOrNull() ?: return danach()
         val passend = eintraege
             .filter { (v, _) -> vergleiche(v, aktuell) <= 0 }
             .let { liste ->
                 if (gesehenText != null) liste.filter { (v, _) -> vergleiche(v, version(gesehenText)) > 0 } else liste.take(OHNE_VORGAENGER)
             }
-        if (passend.isEmpty() || activity.isFinishing) return
-        dialog(activity, passend, aktuell)
+        if (passend.isEmpty() || activity.isFinishing) return danach()
+        dialog(activity, passend, aktuell, danach)
     }
 
     /** Aus „Version und Updates“: die Neuerungen der installierten Version noch einmal */
@@ -56,7 +56,7 @@ object Neuigkeiten {
         if (passend.isNotEmpty() && !activity.isFinishing) dialog(activity, passend, aktuell)
     }
 
-    private fun dialog(activity: AppCompatActivity, passend: List<Pair<List<Int>, List<String>>>, aktuell: List<Int>) {
+    private fun dialog(activity: AppCompatActivity, passend: List<Pair<List<Int>, List<String>>>, aktuell: List<Int>, danach: () -> Unit = {}) {
         val texte = activity.inKinoLelSprache
         val text = SpannableStringBuilder()
         passend.forEachIndexed { i, (v, punkte) ->
@@ -73,6 +73,7 @@ object Neuigkeiten {
             .setTitle(texte.getString(R.string.neu_titel, if (Sprache.aktuell(activity) == "hu") "KinoLel Kívánságok" else BuildConfig.APP_NAME, aktuell.joinToString(".")))
             .setMessage(text.trimEnd('\n'))
             .setPositiveButton(R.string.neu_ok, null)
+            .setOnDismissListener { danach() }
             .show()
     }
 

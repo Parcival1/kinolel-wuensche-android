@@ -63,6 +63,16 @@ jobs:
           path: ausgabe/*.apk
           if-no-files-found: error
 
+      # Debug-Version (eigenes Paket de.kinolel.wuensche.debug) nur für den Benachrichtigungs-Test im Emulator
+      - name: Test-APK (Debug) für den Benachrichtigungs-Test
+        run: ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v7
+        with:
+          name: kinolel-wuensche-test-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 3
+          if-no-files-found: error
+
       - name: Vorab-Version als Entwurf anlegen (nur bei Tag v*; veröffentlicht erst nach grünem Test)
         if: startsWith(github.ref, 'refs/tags/v')
         env:
@@ -79,6 +89,10 @@ jobs:
         with:
           name: kinolel-wuensche-apk
           path: apk
+      - uses: actions/download-artifact@v8
+        with:
+          name: kinolel-wuensche-test-apk
+          path: testapk
       - name: KVM freischalten
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -103,8 +117,9 @@ jobs:
           path: rauchtest/
       - name: Ergebnis prüfen
         run: |
-          cat rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt 2>/dev/null || true
-          if grep -hE "FEHLT|FEHLER|NICHT ungarisch|OHNE Antwort|nicht geprüft" rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt; then echo "::error::Rauchtest mit Fehlern"; exit 1; fi
+          cat rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt 2>/dev/null || true
+          if [ ! -s rauchtest/benachrichtigungen.txt ]; then echo "::error::Benachrichtigungs-Test fehlt"; exit 1; fi
+          if grep -hE "FEHLT|FEHLER|NICHT ungarisch|OHNE Antwort|nicht geprüft" rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt; then echo "::error::Rauchtest mit Fehlern"; exit 1; fi
           if [ -s rauchtest/abstuerze.txt ]; then cat rauchtest/abstuerze.txt; echo "::error::Absturz im logcat"; exit 1; fi
 
   veroeffentlichen:

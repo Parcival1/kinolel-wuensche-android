@@ -88,6 +88,49 @@ adb shell dumpsys activity activities | grep -E "topResumedActivity|mResumedActi
 # zurück auf den deutschen Server per Link (warmer WebView)
 adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d "https://wuensche.kinolel.de/" | tee rauchtest/link-de.txt
 sleep 15; adb exec-out screencap -p > rauchtest/04-link-deutsch.png
+# Benachrichtigungen (Lel 25.10.) mit der Debug-Version (Paket .debug): Anfrage-Stände kommen aus einer Testdatei statt
+# vom Server (ohne Anmeldung, ohne echte Anfragen) – geprüft werden Vergleich, Texte (Kívánságok -> ungarisch) und Anzeige
+TEST_APK=$(ls testapk/*.apk 2>/dev/null | head -1)
+: > rauchtest/benachrichtigungen.txt
+if [ -n "$TEST_APK" ]; then
+  TP="$PAKET.debug"
+  adb install -r "$TEST_APK"
+  adb shell pm grant "$TP" android.permission.POST_NOTIFICATIONS || true
+  stand() { printf '%s' "$1" | adb shell "run-as $TP sh -c 'mkdir -p files && cat > files/test_anfragen.json'"; }
+  pruefen() { adb shell am start -W -n "$TP/de.kinolel.wuensche.MainActivity" --ez kinolel_test_benachrichtigungen true; sleep 6; adb shell dumpsys notification --noredact > "rauchtest/benachrichtigungen-$1.txt"; }
+  erwarte() { # erwarte <schritt> <text> <beschreibung>
+    if grep -q "$2" "rauchtest/benachrichtigungen-$1.txt"; then echo "BENACHRICHTIGUNG: $3" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG FEHLT: $3" | tee -a rauchtest/benachrichtigungen.txt; fi
+  }
+  # 1. erster Stand: nur merken
+  stand '{"host":"kivansagok.kinolel.de","a":true,"l":[{"id":901,"s":1,"m":2,"typ":"movie","tmdb":105,"t":"Vissza a jövőbe"},{"id":902,"s":2,"m":3,"typ":"tv","tmdb":1399,"t":"Trónok harca"}]}'
+  pruefen 1
+  if grep -q "pkg=$TP" rauchtest/benachrichtigungen-1.txt; then echo "BENACHRICHTIGUNG FEHLER: schon beim ersten Stand" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG: erster Stand nur gemerkt (richtig)" | tee -a rauchtest/benachrichtigungen.txt; fi
+  # 2. Film genehmigt, Serie teilweise verfügbar
+  stand '{"host":"kivansagok.kinolel.de","a":true,"l":[{"id":901,"s":2,"m":3,"typ":"movie","tmdb":105,"t":"Vissza a jövőbe"},{"id":902,"s":2,"m":4,"typ":"tv","tmdb":1399,"t":"Trónok harca"}]}'
+  pruefen 2
+  erwarte 2 "Vissza a jövőbe” kérésedet jóváhagyták" "genehmigt (ungarisch)"
+  erwarte 2 "Trónok harca” részben elérhető" "Serie teilweise verfügbar (ungarisch)"
+  # 3. Film verfügbar, neue Anfrage abgelehnt
+  stand '{"host":"kivansagok.kinolel.de","a":true,"l":[{"id":901,"s":5,"m":5,"typ":"movie","tmdb":105,"t":"Vissza a jövőbe"},{"id":902,"s":2,"m":4,"typ":"tv","tmdb":1399,"t":"Trónok harca"},{"id":903,"s":3,"m":1,"typ":"movie","tmdb":11,"t":"Csillagok háborúja"}]}'
+  pruefen 3
+  erwarte 3 "Vissza a jövőbe” most már elérhető" "verfügbar (ungarisch)"
+  erwarte 3 "Csillagok háborúja” kérésedet elutasították" "abgelehnt (ungarisch)"
+  # 4. Deutscher Server: deutsche Texte
+  stand '{"host":"wuensche.kinolel.de","a":true,"l":[{"id":51,"s":1,"m":2,"typ":"movie","tmdb":105,"t":"Zurück in die Zukunft"}]}'
+  pruefen 4
+  stand '{"host":"wuensche.kinolel.de","a":true,"l":[{"id":51,"s":2,"m":5,"typ":"movie","tmdb":105,"t":"Zurück in die Zukunft"}]}'
+  pruefen 5
+  erwarte 5 "Zurück in die Zukunft“ ist jetzt in KinoLel verfügbar" "verfügbar (deutsch)"
+  # 5. Antippen öffnet die Detailseite in der App
+  adb shell cmd statusbar expand-notifications; sleep 2
+  adb exec-out screencap -p > rauchtest/08-benachrichtigungen.png
+  adb shell cmd statusbar collapse
+  adb shell run-as "$TP" rm -f files/test_anfragen.json
+  adb shell am force-stop "$TP"
+else
+  echo "BENACHRICHTIGUNG FEHLT: keine Test-APK" | tee -a rauchtest/benachrichtigungen.txt
+fi
+
 adb logcat -d > rauchtest/logcat.txt 2>&1 || true
 grep -nE "AndroidRuntime: Process: $PAKET|ANR in $PAKET" rauchtest/logcat.txt | head -20 | tee rauchtest/abstuerze.txt
 exit 0
