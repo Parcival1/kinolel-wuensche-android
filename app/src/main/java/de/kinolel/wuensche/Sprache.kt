@@ -92,11 +92,13 @@ object Sprache {
 
     /** Anzeigesprache im Seerr-Konto (falls angemeldet und gewählt), sonst die Standardsprache des Servers */
     private fun lesen(server: String, cookies: String?): String? {
-        if (!cookies.isNullOrBlank()) {
+        // nur angemeldet (Sitzungs-Cookie der Wunschseite) nach dem Konto fragen – sonst gäbe es unnötige 403
+        if (cookies?.contains("connect.sid") == true) {
             runCatching {
                 val ich = JSONObject(holen("$server/api/v1/auth/me", cookies))
-                val einstellungen = JSONObject(holen("$server/api/v1/user/${ich.getInt("id")}/settings/main", cookies))
-                kuerzel(einstellungen.optString("locale"))?.let { return it }
+                val eigene = ich.optJSONObject("settings")?.optString("locale")
+                    ?: JSONObject(holen("$server/api/v1/user/${ich.getInt("id")}/settings/main", cookies)).optString("locale")
+                kuerzel(eigene)?.let { return it }
             }
         }
         return kuerzel(JSONObject(holen("$server/api/v1/settings/public", null)).optString("locale"))
