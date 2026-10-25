@@ -83,5 +83,5 @@ adb shell dumpsys activity activities | grep -E "topResumedActivity|mResumedActi
 adb shell am start -W -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d "https://wuensche.kinolel.de/" | tee rauchtest/link-de.txt
 sleep 15; adb exec-out screencap -p > rauchtest/04-link-deutsch.png
 adb logcat -d > rauchtest/logcat.txt 2>&1 || true
-grep -nE "FATAL EXCEPTION|AndroidRuntime: Process: $PAKET|ANR in $PAKET" rauchtest/logcat.txt | head -20 | tee rauchtest/abstuerze.txt
+grep -nE "AndroidRuntime: Process: $PAKET|ANR in $PAKET" rauchtest/logcat.txt | head -20 | tee rauchtest/abstuerze.txt
 exit 0
