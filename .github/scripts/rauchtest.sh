@@ -29,7 +29,12 @@ if [ -n "$VOR" ] && curl -sSL -o vorversion.apk "$VOR"; then
   adb shell am start -W -n "$PAKET/.MainActivity"
   sleep 10
   # Lel 25.10.: in der App „Magyar“ gewählt (KinoLel Kívánságok), das Gerät auf Deutsch -> „Was ist neu“ ungarisch
-  tippe "Magyar"; sleep 8
+  # umschalten und nachsehen (Leiste zeigt dann „KinoLel Kívánságok“) – ein Systemdialog kann den Tipp schlucken
+  for versuch in 1 2 3; do
+    systemdialog_weg; tippe "Magyar"; sleep 6
+    if ui | grep -q "KinoLel Kívánságok"; then echo "Magyar gewählt (Versuch $versuch)"; break; fi
+  done
+  sleep 2
   adb shell am force-stop "$PAKET"
 fi
 adb shell cmd locale set-app-locales "$PAKET" --locales de-DE || true
