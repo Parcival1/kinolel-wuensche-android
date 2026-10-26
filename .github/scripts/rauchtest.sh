@@ -53,24 +53,37 @@ sleep 6
 if ui | grep -qE "Neu in |New in |Újdonságok"; then echo "NEUIGKEITEN: FEHLER – zweiter Start zeigt sie erneut" | tee -a rauchtest/neuigkeiten.txt; else echo "NEUIGKEITEN: zweiter Start ohne Meldung (richtig)" | tee -a rauchtest/neuigkeiten.txt; fi
 # Lel 25.10.: Logo antippen -> Version und „Nach Updates suchen“ (App noch auf Magyar -> ungarisch)
 # App sicher im Vordergrund (lief sie nicht mehr, steht ein Absturz im logcat am Ende)
-pidof_vorher=$(adb shell pidof "$PAKET" | tr -d "\r")
-echo "INFO: App-Prozess vor dem Logo-Test: ${pidof_vorher:-keiner}" | tee rauchtest/info.txt
-adb shell am start -W -n "$PAKET/.MainActivity"; sleep 4
-for versuch in 1 2 3; do
+# Im Emulator sterben die Google-Play-Dienste unter Last; Android beendet dann auch Apps mit WebView (Schriften-Dienst
+# der Play-Dienste). Darum: Logo-Teil bei einem Abbruch einmal mit neu gestarteter App wiederholen.
+logo_runde() {
+  : > rauchtest/info.txt
+  echo "INFO: App-Prozess vor dem Logo-Test: $(adb shell pidof "$PAKET" | tr -d "\r")" | tee -a rauchtest/info.txt
+  adb shell am start -W -n "$PAKET/.MainActivity"; sleep 4
+  for versuch in 1 2 3; do
+    tippe "Verzió és frissítések" desc; sleep 3
+    ui > rauchtest/info-ui.xml
+    grep -q "Verzió: " rauchtest/info-ui.xml && break
+  done; adb exec-out screencap -p > rauchtest/05-info.png
+  if grep -q "Verzió: $AKTUELL" rauchtest/info-ui.xml; then echo "INFO: Logo öffnet Version $AKTUELL (ungarisch)" | tee -a rauchtest/info.txt; else echo "INFO: Version nach Tipp auf das Logo FEHLT" | tee -a rauchtest/info.txt; fi
+  tippe "Frissítések keresése"; sleep 8
+  ui > rauchtest/info-update-ui.xml; adb exec-out screencap -p > rauchtest/06-update-suchen.png
+  if grep -qE "legújabb verzió|Frissítés elérhető" rauchtest/info-update-ui.xml; then echo "INFO: Nach Updates suchen antwortet ($(grep -oE "A legújabb verzió[^\"]*|Frissítés elérhető" rauchtest/info-update-ui.xml | head -1))" | tee -a rauchtest/info.txt; else echo "INFO: Nach Updates suchen OHNE Antwort" | tee -a rauchtest/info.txt; fi
+  tippe "Rendben"; tippe "Később"; sleep 2
   tippe "Verzió és frissítések" desc; sleep 3
-  ui > rauchtest/info-ui.xml
-  grep -q "Verzió: " rauchtest/info-ui.xml && break
-done; adb exec-out screencap -p > rauchtest/05-info.png
-if grep -q "Verzió: $AKTUELL" rauchtest/info-ui.xml; then echo "INFO: Logo öffnet Version $AKTUELL (ungarisch)" | tee -a rauchtest/info.txt; else echo "INFO: Version nach Tipp auf das Logo FEHLT" | tee -a rauchtest/info.txt; fi
-tippe "Frissítések keresése"; sleep 8
-ui > rauchtest/info-update-ui.xml; adb exec-out screencap -p > rauchtest/06-update-suchen.png
-if grep -qE "legújabb verzió|Frissítés elérhető" rauchtest/info-update-ui.xml; then echo "INFO: Nach Updates suchen antwortet ($(grep -oE "A legújabb verzió[^\"]*|Frissítés elérhető" rauchtest/info-update-ui.xml | head -1))" | tee -a rauchtest/info.txt; else echo "INFO: Nach Updates suchen OHNE Antwort" | tee -a rauchtest/info.txt; fi
-tippe "Rendben"; tippe "Később"; sleep 2
-tippe "Verzió és frissítések" desc; sleep 3
-tippe "Újdonságok"; sleep 3
-ui > rauchtest/info-neu-ui.xml; adb exec-out screencap -p > rauchtest/07-was-ist-neu-erneut.png
-if grep -q "Újdonságok – KinoLel Kívánságok $AKTUELL" rauchtest/info-neu-ui.xml; then echo "INFO: Was ist neu erneut ($AKTUELL)" | tee -a rauchtest/info.txt; else echo "INFO: Was ist neu erneut FEHLT" | tee -a rauchtest/info.txt; fi
-tippe "Rendben"; sleep 1
+  tippe "Újdonságok"; sleep 3
+  ui > rauchtest/info-neu-ui.xml; adb exec-out screencap -p > rauchtest/07-was-ist-neu-erneut.png
+  if grep -q "Újdonságok – KinoLel Kívánságok $AKTUELL" rauchtest/info-neu-ui.xml; then echo "INFO: Was ist neu erneut ($AKTUELL)" | tee -a rauchtest/info.txt; else echo "INFO: Was ist neu erneut FEHLT" | tee -a rauchtest/info.txt; fi
+  tippe "Rendben"; sleep 1
+}
+logo_runde
+if grep -qE "FEHLT|OHNE" rauchtest/info.txt; then
+  cp rauchtest/info.txt rauchtest/info-runde1.txt
+  getoetet=$(adb logcat -d | grep -cE "Killing [0-9]+:$PAKET/.*dying proc")
+  echo "Logo-Teil wiederholen (App von abstürzenden Play-Diensten beendet: $getoetet)"
+  adb shell am force-stop "$PAKET"; sleep 2
+  logo_runde
+  echo "INFO: zweite Runde (erste: $(grep -cE "FEHLT|OHNE" rauchtest/info-runde1.txt) Fehler, App-Abbrüche durch Play-Dienste: $getoetet)" | tee -a rauchtest/info.txt
+fi
 tippe "Deutsch"; sleep 3
 adb shell am force-stop "$PAKET"
 adb shell am start -W -n "$PAKET/.MainActivity"
