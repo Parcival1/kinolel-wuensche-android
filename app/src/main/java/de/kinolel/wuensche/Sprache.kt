@@ -61,6 +61,10 @@ object Sprache {
         return listOf(BuildConfig.SERVER_DE, BuildConfig.SERVER_HU).mapNotNull { Uri.parse(it).host }.filter { v.getBoolean(it, false) }
     }
 
+    fun angemeldet(context: Context, host: String) {
+        context.getSharedPreferences(ANMELDUNG, Context.MODE_PRIVATE).edit().putBoolean(host, true).apply()
+    }
+
     fun abgemeldet(context: Context, host: String) {
         context.getSharedPreferences(ANMELDUNG, Context.MODE_PRIVATE).edit().putBoolean(host, false).apply()
     }

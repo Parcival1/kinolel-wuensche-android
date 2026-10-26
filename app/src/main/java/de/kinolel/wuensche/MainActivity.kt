@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -59,7 +60,12 @@ class MainActivity : AppCompatActivity() {
 
     // Android 13+: Erlaubnis für Benachrichtigungen (einmal, nach freundlicher Frage)
     private val erlaubnis = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
-        if (!ok) Benachrichtigungen.setzen(this, false) else Benachrichtigungen.planen(this)
+        if (!ok) {
+            Benachrichtigungen.setzen(this, false)
+        } else {
+            Benachrichtigungen.planen(this)
+            Benachrichtigungen.pruefen(this, vonHand = true) {}
+        }
     }
 
     private var server: String
@@ -113,7 +119,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun benachrichtigungenEinschalten() {
         Benachrichtigungen.setzen(this, true)
-        if (!Benachrichtigungen.erlaubt(this) && Build.VERSION.SDK_INT >= 33) erlaubnis.launch(Manifest.permission.POST_NOTIFICATIONS)
+        if (!Benachrichtigungen.erlaubt(this) && Build.VERSION.SDK_INT >= 33) {
+            erlaubnis.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            Benachrichtigungen.pruefen(this, vonHand = true) {}
+        }
     }
 
     /** Nur Debug-Version (Rauchtest): sofort prüfen, Anfrage-Stände aus files/test_anfragen.json */
@@ -126,6 +136,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Aktualisierung.fortsetzen(this)
+        Benachrichtigungen.beimOeffnen(this) // v1.3: auch beim Öffnen nachsehen (Hintergrund kann sich verspäten)
         // KinoLel (Lel 22.10.2026): bei jedem Öffnen/Zurückkehren nach Updates suchen (Hinweis in der Sprache der Wunschseite)
         Sprache.wennBekannt { if (!isDestroyed) Aktualisierung.pruefen(this) }
     }
@@ -304,6 +315,38 @@ class MainActivity : AppCompatActivity() {
                     if (an) benachrichtigungenEinschalten() else Benachrichtigungen.setzen(this@MainActivity, false)
                 }
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) })
+            // Lel 26.10.: Diagnose – wann zuletzt nachgesehen, sofort prüfen, Akku-Hinweis
+            if (Benachrichtigungen.an(this@MainActivity)) {
+                val diagnose = TextView(texte).apply {
+                    text = Benachrichtigungen.letztePruefung(this@MainActivity, texte)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                    alpha = 0.8f
+                }
+                addView(diagnose, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(8) })
+                addView(TextView(texte).apply {
+                    text = texte.getString(R.string.benachrichtigung_jetzt)
+                    setTextColor(farbe(R.color.lavendel))
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                    setPadding(0, dp(10), 0, dp(4))
+                    setOnClickListener {
+                        diagnose.text = texte.getString(R.string.benachrichtigung_prueft)
+                        Benachrichtigungen.pruefen(this@MainActivity, vonHand = true) {
+                            diagnose.text = Benachrichtigungen.letztePruefung(this@MainActivity, texte)
+                        }
+                    }
+                })
+                if (!Benachrichtigungen.akkuFrei(this@MainActivity)) {
+                    addView(TextView(texte).apply {
+                        text = texte.getString(R.string.benachrichtigung_akku)
+                        setTextColor(farbe(R.color.lavendel))
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                        setPadding(0, dp(8), 0, 0)
+                        setOnClickListener {
+                            runCatching { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) }
+                        }
+                    })
+                }
+            }
         }
         AlertDialog.Builder(texte)
             .setTitle(name)

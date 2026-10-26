@@ -40,4 +40,20 @@
     <string name="benachrichtigung_ja">Igen, kérem</string>
     <string name="benachrichtigung_nein">Nem, köszönöm</string>
     <string name="benachrichtigung_schalter">Értesítések</string>
+    <string name="benachrichtigung_letzte">Utolsó ellenőrzés: %1$s</string>
+    <string name="benachrichtigung_noch_nie">még nem volt</string>
+    <string name="benachrichtigung_jetzt">Ellenőrzés most</string>
+    <string name="benachrichtigung_prueft">Ellenőrzés …</string>
+    <string name="benachrichtigung_akku">A pontos értesítésekhez koppints ide, és az „Akkumulátor” alatt válaszd a „Nem korlátozott” lehetőséget.</string>
+    <string name="benachrichtigung_weitere_titel">További változások</string>
+    <string name="benachrichtigung_server_abgemeldet">%1$s: nincs bejelentkezve</string>
+    <string name="benachrichtigung_server_fehler">%1$s: nincs kapcsolat</string>
+    <plurals name="benachrichtigung_weitere_text">
+        <item quantity="one">További %d kívánságod változott.</item>
+        <item quantity="other">További %d kívánságod változott.</item>
+    </plurals>
+    <plurals name="benachrichtigung_server_ok">
+        <item quantity="one">%1$s: %2$d kívánság</item>
+        <item quantity="other">%1$s: %2$d kívánság</item>
+    </plurals>
 </resources>

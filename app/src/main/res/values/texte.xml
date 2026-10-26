@@ -41,4 +41,20 @@
     <string name="benachrichtigung_ja">Ja, gerne</string>
     <string name="benachrichtigung_nein">Nein, danke</string>
     <string name="benachrichtigung_schalter">Benachrichtigungen</string>
+    <string name="benachrichtigung_letzte">Letzte Prüfung: %1$s</string>
+    <string name="benachrichtigung_noch_nie">noch keine</string>
+    <string name="benachrichtigung_jetzt">Jetzt prüfen</string>
+    <string name="benachrichtigung_prueft">Wird geprüft …</string>
+    <string name="benachrichtigung_akku">Für pünktliche Benachrichtigungen: hier tippen und unter „Akku“ „Nicht eingeschränkt“ wählen.</string>
+    <string name="benachrichtigung_weitere_titel">Weitere Änderungen</string>
+    <string name="benachrichtigung_server_abgemeldet">%1$s: nicht angemeldet</string>
+    <string name="benachrichtigung_server_fehler">%1$s: keine Verbindung</string>
+    <plurals name="benachrichtigung_weitere_text">
+        <item quantity="one">%d weiterer Wunsch hat sich geändert.</item>
+        <item quantity="other">%d weitere Wünsche haben sich geändert.</item>
+    </plurals>
+    <plurals name="benachrichtigung_server_ok">
+        <item quantity="one">%1$s: %2$d Wunsch</item>
+        <item quantity="other">%1$s: %2$d Wünsche</item>
+    </plurals>
 </resources>

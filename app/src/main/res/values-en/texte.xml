@@ -41,4 +41,20 @@
     <string name="benachrichtigung_ja">Yes, please</string>
     <string name="benachrichtigung_nein">No, thanks</string>
     <string name="benachrichtigung_schalter">Notifications</string>
+    <string name="benachrichtigung_letzte">Last check: %1$s</string>
+    <string name="benachrichtigung_noch_nie">none yet</string>
+    <string name="benachrichtigung_jetzt">Check now</string>
+    <string name="benachrichtigung_prueft">Checking …</string>
+    <string name="benachrichtigung_akku">For timely notifications, tap here and choose “Unrestricted” under “Battery”.</string>
+    <string name="benachrichtigung_weitere_titel">More updates</string>
+    <string name="benachrichtigung_server_abgemeldet">%1$s: not signed in</string>
+    <string name="benachrichtigung_server_fehler">%1$s: no connection</string>
+    <plurals name="benachrichtigung_weitere_text">
+        <item quantity="one">%d more request changed.</item>
+        <item quantity="other">%d more requests changed.</item>
+    </plurals>
+    <plurals name="benachrichtigung_server_ok">
+        <item quantity="one">%1$s: %2$d request</item>
+        <item quantity="other">%1$s: %2$d requests</item>
+    </plurals>
 </resources>

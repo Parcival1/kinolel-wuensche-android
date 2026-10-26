@@ -1,6 +1,18 @@
 {
   "versionen": [
     {
+      "version": "1.3",
+      "de": [
+        "Benachrichtigungen kommen jetzt zuverlässiger – auch für Kívánságok. Im Logo-Menü siehst du, wann zuletzt nachgesehen wurde, und kannst „Jetzt prüfen“ antippen. Außerdem Fehlerbehebungen und Verbesserungen."
+      ],
+      "hu": [
+        "Az értesítések mostantól megbízhatóbban érkeznek – a Kívánságokhoz is. A logó menüjében látod, mikor volt az utolsó ellenőrzés, és az „Ellenőrzés most” gombbal azonnal ellenőrizhetsz. Emellett hibajavítások és fejlesztések."
+      ],
+      "en": [
+        "Notifications now arrive more reliably – also for Kívánságok. In the logo menu you can see when the last check was and tap “Check now”. Also bug fixes and improvements."
+      ]
+    },
+    {
       "version": "1.2",
       "de": [
         "Du bekommst jetzt eine Benachrichtigung, wenn dein Wunsch genehmigt oder verfügbar ist. Ein- und ausschalten: Tippe auf das Logo."

@@ -101,7 +101,8 @@ if [ -n "$TEST_APK" ]; then
   erwarte() { # erwarte <schritt> <text> <beschreibung>
     if grep -q "$2" "rauchtest/benachrichtigungen-$1.txt"; then echo "BENACHRICHTIGUNG: $3" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG FEHLT: $3" | tee -a rauchtest/benachrichtigungen.txt; fi
   }
-  # 1. erster Stand: nur merken
+  JETZT=$(date -u +%Y-%m-%dT%H:%M:%S.000Z); VOR1H=$(date -u -d '-1 hour' +%Y-%m-%dT%H:%M:%S.000Z); VOR3T=$(date -u -d '-3 days' +%Y-%m-%dT%H:%M:%S.000Z)
+  # 1. erster Stand: nur merken (nichts wurde in den letzten 24 h verfügbar)
   stand '{"host":"kivansagok.kinolel.de","a":true,"l":[{"id":901,"s":1,"m":2,"typ":"movie","tmdb":105,"t":"Vissza a jövőbe"},{"id":902,"s":2,"m":3,"typ":"tv","tmdb":1399,"t":"Trónok harca"}]}'
   pruefen 1
   if grep -q "pkg=$TP" rauchtest/benachrichtigungen-1.txt; then echo "BENACHRICHTIGUNG FEHLER: schon beim ersten Stand" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG: erster Stand nur gemerkt (richtig)" | tee -a rauchtest/benachrichtigungen.txt; fi
@@ -111,16 +112,22 @@ if [ -n "$TEST_APK" ]; then
   erwarte 2 "Vissza a jövőbe” kérésedet jóváhagyták" "genehmigt (ungarisch)"
   erwarte 2 "Trónok harca” részben elérhető" "Serie teilweise verfügbar (ungarisch)"
   # 3. Film verfügbar, neue Anfrage abgelehnt
-  stand '{"host":"kivansagok.kinolel.de","a":true,"l":[{"id":901,"s":5,"m":5,"typ":"movie","tmdb":105,"t":"Vissza a jövőbe"},{"id":902,"s":2,"m":4,"typ":"tv","tmdb":1399,"t":"Trónok harca"},{"id":903,"s":3,"m":1,"typ":"movie","tmdb":11,"t":"Csillagok háborúja"}]}'
+  stand '{"host":"kivansagok.kinolel.de","a":true,"l":[{"id":901,"s":5,"m":5,"typ":"movie","tmdb":105,"t":"Vissza a jövőbe"},{"id":902,"s":2,"m":4,"typ":"tv","tmdb":1399,"t":"Trónok harca"},{"id":903,"s":3,"m":1,"typ":"movie","tmdb":11,"t":"Csillagok háborúja","ru":"'"$JETZT"'"},{"id":904,"s":3,"m":1,"typ":"movie","tmdb":12,"t":"Régi elutasított","ru":"'"$VOR3T"'"}]}'
   pruefen 3
   erwarte 3 "Vissza a jövőbe” most már elérhető" "verfügbar (ungarisch)"
   erwarte 3 "Csillagok háborúja” kérésedet elutasították" "abgelehnt (ungarisch)"
-  # 4. Deutscher Server: deutsche Texte
-  stand '{"host":"wuensche.kinolel.de","a":true,"l":[{"id":51,"s":1,"m":2,"typ":"movie","tmdb":105,"t":"Zurück in die Zukunft"}]}'
+  if grep -q "Régi elutasított" rauchtest/benachrichtigungen-3.txt; then echo "BENACHRICHTIGUNG FEHLER: alte Änderung (3 Tage) gemeldet" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG: alte unbekannte Änderung nicht gemeldet (richtig)" | tee -a rauchtest/benachrichtigungen.txt; fi
+  # 4. Deutscher Server, erster Lauf (Lel 26.10.: Mail 7:40, aber keine Benachrichtigung): „verfügbar“ der letzten 24 h
+  #    nachholen, Älteres nicht
+  stand '{"host":"wuensche.kinolel.de","a":true,"l":[{"id":51,"s":1,"m":2,"typ":"movie","tmdb":105,"t":"Zurück in die Zukunft"},{"id":52,"s":5,"m":5,"typ":"movie","tmdb":106,"t":"Die Mumie","ma":"'"$VOR1H"'"},{"id":53,"s":5,"m":5,"typ":"movie","tmdb":107,"t":"Alter Film","ma":"'"$VOR3T"'"}]}'
   pruefen 4
+  erwarte 4 "Die Mumie“ ist jetzt in KinoLel verfügbar" "erster Lauf holt „verfügbar“ der letzten 24 h nach (deutsch)"
+  if grep -q "Alter Film" rauchtest/benachrichtigungen-4.txt; then echo "BENACHRICHTIGUNG FEHLER: im ersten Lauf Älteres gemeldet" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG: erster Lauf meldet nichts Älteres (richtig)" | tee -a rauchtest/benachrichtigungen.txt; fi
   stand '{"host":"wuensche.kinolel.de","a":true,"l":[{"id":51,"s":2,"m":5,"typ":"movie","tmdb":105,"t":"Zurück in die Zukunft"}]}'
   pruefen 5
   erwarte 5 "Zurück in die Zukunft“ ist jetzt in KinoLel verfügbar" "verfügbar (deutsch)"
+  # Diagnose: letzte Prüfung und Protokoll gemerkt
+  if adb shell run-as "$TP" cat shared_prefs/kinolel_wuensche_benachrichtigungen.xml | grep -q "protokoll"; then echo "BENACHRICHTIGUNG: Diagnose (letzte Prüfung, Protokoll) gemerkt" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG FEHLT: Diagnose" | tee -a rauchtest/benachrichtigungen.txt; fi
   # 5. Antippen öffnet die Detailseite in der App
   adb shell cmd statusbar expand-notifications; sleep 2
   adb exec-out screencap -p > rauchtest/08-benachrichtigungen.png
