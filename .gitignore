@@ -6,3 +6,5 @@ local.properties
 *.p12
 *.jks
 .idea/
+# Firebase-Konfiguration kommt im CI aus dem Secret GOOGLE_SERVICES_JSON
+app/google-services.json

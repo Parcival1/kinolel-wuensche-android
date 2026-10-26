@@ -37,6 +37,13 @@ jobs:
           if [ -z "$KEYSTORE_BASE64" ]; then echo "::error::Secret KEYSTORE_BASE64 fehlt"; exit 1; fi
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/kinolel-release.p12"
 
+      - name: Firebase-Konfiguration (Secret GOOGLE_SERVICES_JSON, von Lel)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; echo "Firebase: eingebunden"
+          else echo "Firebase: Secret fehlt – App ohne Push (15-Minuten-Prüfung)"; fi
+
       - name: Assemble release APK
         env:
           KEYSTORE_FILE: ${{ runner.temp }}/kinolel-release.p12
@@ -98,8 +105,16 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Firebase-Dienstkonto für den Push-Test (Secret FCM_DIENSTKONTO, von Lel)
+        env:
+          FCM_DIENSTKONTO: ${{ secrets.FCM_DIENSTKONTO }}
+        run: |
+          mkdir -m 700 -p "$RUNNER_TEMP/fcm"
+          if [ -n "$FCM_DIENSTKONTO" ]; then (umask 077; printf '%s' "$FCM_DIENSTKONTO" > "$RUNNER_TEMP/fcm/dienstkonto.json"); echo "Dienstkonto: da"
+          else echo "Dienstkonto: Secret fehlt – Push-Test wird übersprungen"; fi
       - name: Emulator, App, App-Links, Bildschirmfotos
         env:
+          FCM_DIENSTKONTO_DATEI: ${{ runner.temp }}/fcm/dienstkonto.json
           # Vorversion über die GitHub-API finden (ohne Anmeldung oft gesperrt: 60 Anfragen/Std. je Runner-Adresse)
           GH_TOKEN: ${{ github.token }}
         uses: reactivecircus/android-emulator-runner@v2
@@ -117,9 +132,13 @@ jobs:
           path: rauchtest/
       - name: Ergebnis prüfen
         run: |
-          cat rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt 2>/dev/null || true
+          cat rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt rauchtest/push.txt 2>/dev/null || true
+          if grep -q "PUSH: übersprungen" rauchtest/push.txt 2>/dev/null; then
+            if [[ "$GITHUB_REF" == refs/tags/v* ]]; then echo "::error::Push-Test übersprungen (Firebase-Secrets fehlen) – kein Release"; exit 1; fi
+            echo "::warning::Push-Test übersprungen (Firebase-Secrets fehlen)"
+          fi
           if [ ! -s rauchtest/benachrichtigungen.txt ]; then echo "::error::Benachrichtigungs-Test fehlt"; exit 1; fi
-          if grep -hE "FEHLT|FEHLER|NICHT ungarisch|OHNE Antwort|nicht geprüft" rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt; then echo "::error::Rauchtest mit Fehlern"; exit 1; fi
+          if grep -hE "FEHLT|FEHLER|NICHT ungarisch|OHNE Antwort|nicht geprüft" rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt rauchtest/push.txt; then echo "::error::Rauchtest mit Fehlern"; exit 1; fi
           if [ -s rauchtest/abstuerze.txt ]; then cat rauchtest/abstuerze.txt; echo "::error::Absturz im logcat"; exit 1; fi
 
   veroeffentlichen:
