@@ -49,7 +49,6 @@ import java.util.Locale
 object Benachrichtigungen {
     private const val VORLIEBEN = "kinolel_wuensche_benachrichtigungen"
     private const val JOB_ID = 4202
-    const val JOB_ID_SOFORT = 4203 // nach einer Push-Nachricht (v1.4)
     private const val KANAL = "wuensche"
     private const val ABSTAND_MS = 15 * 60 * 1000L
     private const val PROBE_MS = 6 * 60 * 60 * 1000L
@@ -70,41 +69,6 @@ object Benachrichtigungen {
     fun setzen(context: Context, an: Boolean) {
         vorlieben(context).edit().putBoolean("an", an).apply()
         planen(context)
-        themenAbgleichen(context)
-    }
-
-    /** v1.4: nach einer Push-Nachricht sofort prüfen – beschleunigter Job, läuft auch im Ruhezustand des Geräts */
-    fun sofortPruefen(context: Context) {
-        val planer = context.getSystemService(JobScheduler::class.java) ?: return
-        val auftrag = JobInfo.Builder(JOB_ID_SOFORT, ComponentName(context, WunschPruefung::class.java))
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-        if (Build.VERSION.SDK_INT >= 31) auftrag.setExpedited(true) else auftrag.setOverrideDeadline(10_000)
-        val ok = runCatching { planer.schedule(auftrag.build()) == JobScheduler.RESULT_SUCCESS }.getOrDefault(false)
-        if (!ok) haupt.post { pruefen(context, vonHand = true) {} }
-    }
-
-    /** Push-Themen der angemeldeten Server (kl-<Jellyfin-ID>) abonnieren – nur wenn Benachrichtigungen an sind */
-    fun themenAbgleichen(context: Context) {
-        val v = vorlieben(context)
-        val themen = if (an(context) && erlaubt(context)) alleServer().mapNotNull { v.getString("thema_$it", null) }.toSet() else emptySet()
-        Push.themenAbgleichen(context, themen)
-    }
-
-    private fun themaMerken(context: Context, host: String, ergebnis: JSONObject?) {
-        val jf = ergebnis?.optString("jf").orEmpty().replace("-", "").lowercase()
-        val uid = ergebnis?.optInt("uid") ?: 0
-        val instanz = if (Uri.parse(BuildConfig.SERVER_HU).host == host) "hu" else "de"
-        val thema = when {
-            ergebnis == null -> null
-            Regex("[0-9a-f]{32}").matches(jf) -> "kl-$jf"
-            uid > 0 -> "kl-$instanz-u$uid"
-            else -> null
-        }
-        val v = vorlieben(context)
-        if (v.getString("thema_$host", null) != thema) {
-            v.edit().apply { if (thema == null) remove("thema_$host") else putString("thema_$host", thema) }.apply()
-            themenAbgleichen(context)
-        }
     }
 
     fun erlaubt(context: Context) = Build.VERSION.SDK_INT < 33 ||
@@ -254,8 +218,6 @@ object Benachrichtigungen {
                 if (me.ok) {
                   aus.a = true;
                   var u = await me.json();
-                  aus.jf = u.jellyfinUserId || '';
-                  aus.uid = u.id || 0;
                   var r = await fetch('/api/v1/request?take=30&skip=0&filter=all&sort=modified&requestedBy=' + u.id);
                   var d = r.ok ? await r.json() : { results: [] };
                   var bekannt = $bekannt;
@@ -298,7 +260,6 @@ object Benachrichtigungen {
             // abgemeldet (401/403): bis zur nächsten Anmeldung nicht mehr regelmäßig fragen; sonst (offline, Server weg) später
             if (ergebnis.optInt("s") in setOf(401, 403)) {
                 Sprache.abgemeldet(context, host)
-                themaMerken(context, host, null)
                 ergebnisse.put(host, JSONObject().put("z", "abgemeldet"))
             } else {
                 ergebnisse.put(host, JSONObject().put("z", "fehler"))
@@ -306,7 +267,6 @@ object Benachrichtigungen {
             return
         }
         Sprache.angemeldet(context, host)
-        themaMerken(context, host, ergebnis)
         val alt = v.getString("stand_$host", null)?.let { JSONObject(it) }
         val erster = alt == null
         val neu = alt?.let { JSONObject(it.toString()) } ?: JSONObject() // bekannte Anfragen bleiben gemerkt
@@ -442,8 +402,7 @@ object Benachrichtigungen {
 /** Hintergrundprüfung (JobScheduler, etwa alle 15 Minuten, nur mit Netz) */
 class WunschPruefung : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
-        // nach einer Push-Nachricht auch nicht angemeldete Server gleich mitprüfen
-        Benachrichtigungen.pruefen(this, vonHand = params.jobId == Benachrichtigungen.JOB_ID_SOFORT) { jobFinished(params, false) }
+        Benachrichtigungen.pruefen(this) { jobFinished(params, false) }
         return true
     }
 

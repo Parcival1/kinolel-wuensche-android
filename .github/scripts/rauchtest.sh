@@ -141,34 +141,6 @@ if [ -n "$TEST_APK" ]; then
   erwarte 5 "Zurück in die Zukunft“ ist jetzt in KinoLel verfügbar" "verfügbar (deutsch)"
   # Diagnose: letzte Prüfung und Protokoll gemerkt
   if adb shell run-as "$TP" cat shared_prefs/kinolel_wuensche_benachrichtigungen.xml | grep -q "protokoll"; then echo "BENACHRICHTIGUNG: Diagnose (letzte Prüfung, Protokoll) gemerkt" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG FEHLT: Diagnose" | tee -a rauchtest/benachrichtigungen.txt; fi
-  # 6. Push (v1.4): Gerät gesperrt und im Ruhezustand -> inhaltslose Firebase-Nachricht -> sofortige Prüfung
-  : > rauchtest/push.txt
-  if [ -s "${FCM_DIENSTKONTO_DATEI:-/gibt-es-nicht}" ]; then
-    THEMA="kl-test-$(date +%s)"
-    adb logcat -c
-    adb shell am start -W -n "$TP/de.kinolel.wuensche.MainActivity" --es kinolel_test_thema "$THEMA"
-    for i in $(seq 1 20); do sleep 3; adb logcat -d | grep -q "Push: Thema kl-test-.* abonniert" && break; done
-    if adb logcat -d | grep -q "Push: Thema kl-test-.* abonniert"; then echo "PUSH: Test-Thema abonniert" | tee -a rauchtest/push.txt
-    else echo "PUSH FEHLT: Thema nicht abonniert" | tee -a rauchtest/push.txt; fi
-    stand '{"host":"kivansagok.kinolel.de","a":true,"l":[{"id":901,"s":5,"m":5,"typ":"movie","tmdb":105,"t":"Vissza a jövőbe"},{"id":902,"s":2,"m":4,"typ":"tv","tmdb":1399,"t":"Trónok harca"},{"id":903,"s":3,"m":1,"typ":"movie","tmdb":11,"t":"Csillagok háborúja"},{"id":905,"s":2,"m":3,"typ":"movie","tmdb":13,"t":"Push-próba","ru":"'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'"}]}'
-    adb shell input keyevent KEYCODE_SLEEP; sleep 2
-    adb shell dumpsys battery unplug
-    adb shell dumpsys deviceidle force-idle | tee -a rauchtest/push.txt
-    t0=$(date +%s)
-    python3 .github/scripts/fcm_senden.py "$FCM_DIENSTKONTO_DATEI" "$THEMA" kinolel=pruefen typ=MEDIA_APPROVED seite=hu | tee -a rauchtest/push.txt
-    for i in $(seq 1 30); do sleep 2; adb shell dumpsys notification --noredact | grep -q "Push-próba" && break; done
-    dauer=$(( $(date +%s) - t0 ))
-    adb shell dumpsys notification --noredact > rauchtest/benachrichtigungen-push.txt
-    if grep -q "Push-próba” kérésedet jóváhagyták" rauchtest/benachrichtigungen-push.txt; then echo "PUSH: Benachrichtigung bei gesperrtem Gerät im Ruhezustand nach ${dauer} s" | tee -a rauchtest/push.txt
-    else echo "PUSH FEHLT: keine Benachrichtigung nach ${dauer} s" | tee -a rauchtest/push.txt; fi
-    if adb logcat -d | grep -q "Push empfangen"; then echo "PUSH: Nachricht in der App angekommen" | tee -a rauchtest/push.txt
-    else echo "PUSH FEHLT: Nachricht nicht in der App angekommen" | tee -a rauchtest/push.txt; fi
-    adb logcat -d | grep -E "KinoLelWuensche|FirebaseMessaging|FCM" | tail -40 > rauchtest/push-log.txt
-    adb shell dumpsys deviceidle unforce; adb shell dumpsys battery reset
-    adb shell input keyevent KEYCODE_WAKEUP; sleep 2
-  else
-    echo "PUSH: übersprungen – Firebase-Secrets fehlen" | tee -a rauchtest/push.txt
-  fi
   # 5. Antippen öffnet die Detailseite in der App
   adb shell cmd statusbar expand-notifications; sleep 2
   adb exec-out screencap -p > rauchtest/08-benachrichtigungen.png

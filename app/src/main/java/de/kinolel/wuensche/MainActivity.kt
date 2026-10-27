@@ -92,7 +92,6 @@ class MainActivity : AppCompatActivity() {
         // Lel 25.10.: Benachrichtigungen, wenn ein Wunsch genehmigt oder verfügbar ist
         Benachrichtigungen.kanalAnlegen(this)
         Benachrichtigungen.planen(this)
-        Benachrichtigungen.themenAbgleichen(this) // v1.4: Push-Themen (nach Neuinstallation/Token-Wechsel neu)
         Sprache.beiAnmeldung = { if (!isDestroyed) benachrichtigungenFragen() }
         testPruefen(intent)
     }
@@ -132,8 +131,6 @@ class MainActivity : AppCompatActivity() {
         if (BuildConfig.DEBUG && intent?.getBooleanExtra(Benachrichtigungen.TEST_EXTRA, false) == true) {
             Benachrichtigungen.pruefen(this) { Log.i("KinoLelWuensche", "Test-Prüfung fertig") }
         }
-        // Push-Test (nur Debug): Thema direkt abonnieren
-        if (BuildConfig.DEBUG) intent?.getStringExtra("kinolel_test_thema")?.let { Push.themenAbgleichen(this, setOf(it)) }
     }
 
     override fun onResume() {

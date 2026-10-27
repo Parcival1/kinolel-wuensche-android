@@ -1,18 +1,6 @@
 {
   "versionen": [
     {
-      "version": "1.4",
-      "de": [
-        "Benachrichtigungen kommen jetzt sofort."
-      ],
-      "hu": [
-        "Az értesítések mostantól azonnal érkeznek."
-      ],
-      "en": [
-        "Notifications now arrive instantly."
-      ]
-    },
-    {
       "version": "1.3",
       "de": [
         "Benachrichtigungen kommen jetzt zuverlässiger – auch für Kívánságok. Im Logo-Menü siehst du, wann zuletzt nachgesehen wurde, und kannst „Jetzt prüfen“ antippen. Außerdem Fehlerbehebungen und Verbesserungen."
