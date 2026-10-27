@@ -25,6 +25,8 @@ android {
         buildConfigField("String", "SERVER_DE", "\"${marke.getProperty("SERVER_DE")}\"")
         buildConfigField("String", "SERVER_HU", "\"${marke.getProperty("SERVER_HU")}\"")
         buildConfigField("String", "UPDATE_REPO", "\"${marke.getProperty("UPDATE_REPO")}\"")
+        buildConfigField("String", "KINOLEL_SERVER", "\"${marke.getProperty("KINOLEL_SERVER")}\"")
+        buildConfigField("String", "KINOLEL_APP", "\"${marke.getProperty("KINOLEL_APP")}\"")
         manifestPlaceholders["hostDe"] = marke.getProperty("SERVER_DE").removePrefix("https://")
         manifestPlaceholders["hostHu"] = marke.getProperty("SERVER_HU").removePrefix("https://")
     }

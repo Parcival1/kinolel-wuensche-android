@@ -48,6 +48,10 @@ import androidx.core.view.WindowInsetsCompat
  * - Fremde Links (Jellyfin, TMDB, Trailer …) öffnen in der passenden App bzw. im Browser.
  */
 class MainActivity : AppCompatActivity() {
+    private companion object {
+        const val KINOLEL_AKTIVITAET = "org.jellyfin.mobile.MainActivity"
+    }
+
     private lateinit var web: WebView
     private lateinit var knopfDe: TextView
     private lateinit var knopfHu: TextView
@@ -127,7 +131,47 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Nur Debug-Version (Rauchtest): sofort prüfen, Anfrage-Stände aus files/test_anfragen.json */
+    /**
+     * Fremde Links: „Auf KinoLel abspielen“ (Lel 27.10.: „… dass wenn ich bei einem Inhalt auf ‚Auf Kinolel abspielen‘
+     * klicke und am Android-Gerät bin, es sich automatisch in KinoLel statt im Browser öffnet“) geht direkt an die
+     * KinoLel-App, alles andere (und KinoLel-Links ohne App) wie bisher an den Browser bzw. die passende App.
+     */
+    private fun linkExtern(uri: Uri): Boolean {
+        if (kinolelOeffnen(uri)) return true
+        return try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE))
+            true
+        } catch (e: ActivityNotFoundException) {
+            false
+        }
+    }
+
+    /**
+     * Links auf kinolel.de/web… (Jellyfin-Weboberfläche, z. B. #/details?id=…) mit einem expliziten Aufruf der
+     * KinoLel-App öffnen. Explizit statt Intent-Filter: kinolel.de ist für die KinoLel-App als App-Link bestätigt –
+     * ein Filter für /web würde sonst alle kinolel.de-Links auf dem Gerät in die App ziehen. Ohne App: false (Browser).
+     */
+    private fun kinolelOeffnen(uri: Uri): Boolean {
+        val kinolel = Uri.parse(BuildConfig.KINOLEL_SERVER)
+        if (uri.scheme != "https" || !uri.host.equals(kinolel.host, ignoreCase = true) || uri.path?.startsWith("/web") != true) return false
+        val ziel = Intent(Intent.ACTION_VIEW, uri)
+            .setClassName(BuildConfig.KINOLEL_APP, KINOLEL_AKTIVITAET)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return try {
+            startActivity(ziel)
+            Log.i("KinoLelWuensche", "Auf KinoLel abspielen: KinoLel-App geöffnet")
+            true
+        } catch (e: ActivityNotFoundException) {
+            Log.i("KinoLelWuensche", "Auf KinoLel abspielen: KinoLel-App nicht installiert – Browser")
+            false
+        } catch (e: SecurityException) {
+            false
+        }
+    }
+
     private fun testPruefen(intent: Intent?) {
+        // Rauchtest (nur Debug): Link so öffnen, wie ein Tipp in der Wunschseite ihn öffnet
+        if (BuildConfig.DEBUG) intent?.getStringExtra("kinolel_test_link")?.let { linkExtern(Uri.parse(it)) }
         if (BuildConfig.DEBUG && intent?.getBooleanExtra(Benachrichtigungen.TEST_EXTRA, false) == true) {
             Benachrichtigungen.pruefen(this) { Log.i("KinoLelWuensche", "Test-Prüfung fertig") }
         }
@@ -378,12 +422,7 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
             if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "mailto" || uri.scheme == "tel") {
-                try {
-                    startActivity(Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE))
-                } catch (e: ActivityNotFoundException) {
-                    return false
-                }
-                return true
+                return linkExtern(uri)
             }
             return true // unbekannte Schemata (intent:, market: …) nicht im WebView öffnen
         }

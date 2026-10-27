@@ -1,6 +1,18 @@
 {
   "versionen": [
     {
+      "version": "1.4",
+      "de": [
+        "„Auf KinoLel abspielen“ öffnet den Titel jetzt direkt in der KinoLel-App – wenn sie installiert ist, sonst wie bisher im Browser."
+      ],
+      "hu": [
+        "A lejátszás gomb mostantól közvetlenül a KinoLel alkalmazásban nyitja meg a címet – ha telepítve van, különben a böngészőben, mint eddig."
+      ],
+      "en": [
+        "“Play on KinoLel” now opens the title right in the KinoLel app – if it is installed, otherwise in the browser as before."
+      ]
+    },
+    {
       "version": "1.3",
       "de": [
         "Benachrichtigungen kommen jetzt zuverlässiger – auch für Kívánságok. Im Logo-Menü siehst du, wann zuletzt nachgesehen wurde, und kannst „Jetzt prüfen“ antippen. Außerdem Fehlerbehebungen und Verbesserungen."

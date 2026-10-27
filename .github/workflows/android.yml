@@ -117,9 +117,10 @@ jobs:
           path: rauchtest/
       - name: Ergebnis prüfen
         run: |
-          cat rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt 2>/dev/null || true
+          cat rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt rauchtest/kinolel-link.txt 2>/dev/null || true
+          if [ ! -s rauchtest/kinolel-link.txt ]; then echo "::error::KinoLel-Link-Test fehlt"; exit 1; fi
           if [ ! -s rauchtest/benachrichtigungen.txt ]; then echo "::error::Benachrichtigungs-Test fehlt"; exit 1; fi
-          if grep -hE "FEHLT|FEHLER|NICHT ungarisch|OHNE Antwort|nicht geprüft" rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt; then echo "::error::Rauchtest mit Fehlern"; exit 1; fi
+          if grep -hE "FEHLT|FEHLER|NICHT ungarisch|OHNE Antwort|nicht geprüft" rauchtest/sprache.txt rauchtest/neuigkeiten.txt rauchtest/info.txt rauchtest/benachrichtigungen.txt rauchtest/kinolel-link.txt; then echo "::error::Rauchtest mit Fehlern"; exit 1; fi
           if [ -s rauchtest/abstuerze.txt ]; then cat rauchtest/abstuerze.txt; echo "::error::Absturz im logcat"; exit 1; fi
 
   veroeffentlichen:

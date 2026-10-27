@@ -141,6 +141,26 @@ if [ -n "$TEST_APK" ]; then
   erwarte 5 "Zurück in die Zukunft“ ist jetzt in KinoLel verfügbar" "verfügbar (deutsch)"
   # Diagnose: letzte Prüfung und Protokoll gemerkt
   if adb shell run-as "$TP" cat shared_prefs/kinolel_wuensche_benachrichtigungen.xml | grep -q "protokoll"; then echo "BENACHRICHTIGUNG: Diagnose (letzte Prüfung, Protokoll) gemerkt" | tee -a rauchtest/benachrichtigungen.txt; else echo "BENACHRICHTIGUNG FEHLT: Diagnose" | tee -a rauchtest/benachrichtigungen.txt; fi
+  # 6. „Auf KinoLel abspielen“ (Lel 27.10.): mit KinoLel-App öffnet der Link die App, ohne den Browser
+  : > rauchtest/kinolel-link.txt
+  KL_APK=$(gh api "repos/Parcival1/kinolel-android/releases?per_page=10" --jq "[.[] | select(.draft | not) | .assets[] | select(.name | endswith(\".apk\")) | .browser_download_url][0] // empty" 2>/dev/null || true)
+  KL_LINK='https://kinolel.de/web/#/details?id=0123456789abcdef0123456789abcdef&serverId=fedcba9876543210fedcba9876543210'
+  oben() { adb shell dumpsys activity activities | grep -E "topResumedActivity|mResumedActivity" | head -1; }
+  if [ -n "$KL_APK" ] && curl -sSL -o kinolel.apk "$KL_APK" && adb install -r kinolel.apk; then
+    adb shell am start -W -n "$TP/de.kinolel.wuensche.MainActivity" --es kinolel_test_link "'$KL_LINK'"; sleep 6
+    o=$(oben); echo "$o" > rauchtest/kinolel-link-oben-1.txt; adb exec-out screencap -p > rauchtest/09-kinolel-app.png
+    if echo "$o" | grep -q "de.kinolel.app/"; then echo "KINOLEL-LINK: öffnet die KinoLel-App" | tee -a rauchtest/kinolel-link.txt
+    else echo "KINOLEL-LINK FEHLT: KinoLel-App nicht geöffnet ($o)" | tee -a rauchtest/kinolel-link.txt; fi
+    adb shell am force-stop de.kinolel.app
+    adb uninstall de.kinolel.app
+    adb shell am start -W -n "$TP/de.kinolel.wuensche.MainActivity" --es kinolel_test_link "'$KL_LINK'"; sleep 6
+    o=$(oben); echo "$o" > rauchtest/kinolel-link-oben-2.txt; adb exec-out screencap -p > rauchtest/10-ohne-kinolel-browser.png
+    if echo "$o" | grep -qE "de.kinolel.app/|de.kinolel.wuensche"; then echo "KINOLEL-LINK FEHLT: ohne KinoLel-App kein Browser ($o)" | tee -a rauchtest/kinolel-link.txt
+    else echo "KINOLEL-LINK: ohne KinoLel-App öffnet der Browser" | tee -a rauchtest/kinolel-link.txt; fi
+    adb shell input keyevent KEYCODE_HOME
+  else
+    echo "KINOLEL-LINK FEHLT: KinoLel-App (letztes Release) nicht installierbar" | tee -a rauchtest/kinolel-link.txt
+  fi
   # 5. Antippen öffnet die Detailseite in der App
   adb shell cmd statusbar expand-notifications; sleep 2
   adb exec-out screencap -p > rauchtest/08-benachrichtigungen.png
